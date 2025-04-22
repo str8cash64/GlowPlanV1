@@ -1,0 +1,1039 @@
+import SwiftUI
+
+struct MainTabView: View {
+    @State private var selectedTab = 0
+    
+    init() {
+        // Set the tab bar appearance
+        let appearance = UITabBarAppearance()
+        appearance.backgroundColor = UIColor.white
+        
+        let itemAppearance = UITabBarItemAppearance()
+        itemAppearance.normal.iconColor = UIColor.gray
+        itemAppearance.normal.titleTextAttributes = [.foregroundColor: UIColor.gray]
+        itemAppearance.selected.iconColor = UIColor(red: 1.0, green: 0.55, blue: 0.55, alpha: 1.0) // Close to #FF8C8C
+        itemAppearance.selected.titleTextAttributes = [.foregroundColor: UIColor(red: 1.0, green: 0.55, blue: 0.55, alpha: 1.0)]
+        
+        appearance.stackedLayoutAppearance = itemAppearance
+        appearance.inlineLayoutAppearance = itemAppearance
+        appearance.compactInlineLayoutAppearance = itemAppearance
+        
+        UITabBar.appearance().standardAppearance = appearance
+        if #available(iOS 15.0, *) {
+            UITabBar.appearance().scrollEdgeAppearance = appearance
+        }
+    }
+    
+    var body: some View {
+        TabView(selection: $selectedTab) {
+            HomeView()
+                .tabItem {
+                    Label("Home", systemImage: "house.fill")
+                }
+                .tag(0)
+            
+            RoutinesListView()
+                .tabItem {
+                    Label("Routines", systemImage: "heart.fill")
+                }
+                .tag(1)
+            
+            RecommendationsView()
+                .tabItem {
+                    Label("For You", systemImage: "sparkles")
+                }
+                .tag(2)
+            
+            ChatView()
+                .tabItem {
+                    Label("Chat", systemImage: "message.fill")
+                }
+                .tag(3)
+            
+            AccountView()
+                .tabItem {
+                    Label("Account", systemImage: "person.fill")
+                }
+                .tag(4)
+        }
+        .accentColor(Color("SalmonPink"))
+    }
+}
+
+// MARK: - Home View
+struct HomeView: View {
+    @State private var showingNotifications = false
+    @State private var activeIndex = 0
+    
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Welcome and profile section
+                    HStack(alignment: .center) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Good Morning, Taylor")
+                                .font(.system(size: 28, weight: .bold, design: .rounded))
+                                .foregroundColor(Color("CharcoalGray"))
+                            
+                            Text("Your skin is looking radiant today!")
+                                .font(.system(size: 16, design: .rounded))
+                                .foregroundColor(Color("CharcoalGray").opacity(0.7))
+                        }
+                        
+                        Spacer()
+                        
+                        Button {
+                            showingNotifications.toggle()
+                        } label: {
+                            ZStack(alignment: .topTrailing) {
+                                Circle()
+                                    .fill(Color.white)
+                                    .frame(width: 44, height: 44)
+                                    .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
+                                
+                                Image(systemName: "bell.fill")
+                                    .font(.system(size: 18))
+                                    .foregroundColor(Color("SalmonPink"))
+                                    .padding(12)
+                                
+                                Circle()
+                                    .fill(Color("SalmonPink"))
+                                    .frame(width: 12, height: 12)
+                                    .offset(x: 2, y: -2)
+                            }
+                        }
+                    }
+                    .padding(.horizontal)
+                    .padding(.top, 20)
+                    
+                    // Cycle tracker card with improved visual design
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 24)
+                            .fill(
+                                LinearGradient(
+                                    gradient: Gradient(colors: [Color("Peach"), Color("SalmonPink").opacity(0.7)]),
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .shadow(color: .black.opacity(0.15), radius: 10, x: 0, y: 5)
+                        
+                        VStack(spacing: 16) {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("Cycle Day 15")
+                                        .font(.system(size: 26, weight: .bold, design: .rounded))
+                                        .foregroundColor(.white)
+                                    
+                                    Text("Ovulation Phase")
+                                        .font(.system(size: 18, weight: .medium, design: .rounded))
+                                        .foregroundColor(.white.opacity(0.9))
+                                }
+                                
+                                Spacer()
+                                
+                                ZStack {
+                                    Circle()
+                                        .stroke(Color.white.opacity(0.3), lineWidth: 6)
+                                        .frame(width: 64, height: 64)
+                                    
+                                    Circle()
+                                        .trim(from: 0, to: 0.5)
+                                        .stroke(Color.white, lineWidth: 6)
+                                        .frame(width: 64, height: 64)
+                                        .rotationEffect(.degrees(-90))
+                                    
+                                    Text("15/30")
+                                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                                        .foregroundColor(.white)
+                                }
+                            }
+                            
+                            Divider()
+                                .background(Color.white.opacity(0.5))
+                            
+                            HStack(spacing: 20) {
+                                VStack(spacing: 10) {
+                                    ZStack {
+                                        Circle()
+                                            .fill(Color.white.opacity(0.2))
+                                            .frame(width: 48, height: 48)
+                                        
+                                        Image(systemName: "drop.fill")
+                                            .font(.system(size: 22))
+                                            .foregroundColor(.white)
+                                    }
+                                    
+                                    Text("Hydrate")
+                                        .font(.system(size: 14, weight: .medium, design: .rounded))
+                                        .foregroundColor(.white)
+                                }
+                                
+                                Spacer()
+                                
+                                VStack(spacing: 10) {
+                                    ZStack {
+                                        Circle()
+                                            .fill(Color.white.opacity(0.2))
+                                            .frame(width: 48, height: 48)
+                                        
+                                        Image(systemName: "allergens")
+                                            .font(.system(size: 22))
+                                            .foregroundColor(.white)
+                                    }
+                                    
+                                    Text("Glow")
+                                        .font(.system(size: 14, weight: .medium, design: .rounded))
+                                        .foregroundColor(.white)
+                                }
+                                
+                                Spacer()
+                                
+                                VStack(spacing: 10) {
+                                    ZStack {
+                                        Circle()
+                                            .fill(Color.white.opacity(0.2))
+                                            .frame(width: 48, height: 48)
+                                        
+                                        Image(systemName: "sun.max.fill")
+                                            .font(.system(size: 22))
+                                            .foregroundColor(.white)
+                                    }
+                                    
+                                    Text("Protect")
+                                        .font(.system(size: 14, weight: .medium, design: .rounded))
+                                        .foregroundColor(.white)
+                                }
+                            }
+                        }
+                        .padding(24)
+                    }
+                    .frame(height: 200)
+                    .padding(.horizontal)
+                    
+                    // Feature cards carousel
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("Skin Insights")
+                            .font(.system(size: 22, weight: .bold, design: .rounded))
+                            .foregroundColor(Color("CharcoalGray"))
+                            .padding(.horizontal)
+                        
+                        TabView(selection: $activeIndex) {
+                            FeatureCard(
+                                title: "Skin Hydration",
+                                description: "Your skin needs extra hydration during ovulation",
+                                imageName: "drop.fill",
+                                backgroundColor: Color.blue.opacity(0.7)
+                            )
+                            .tag(0)
+                            
+                            FeatureCard(
+                                title: "UV Protection",
+                                description: "Use SPF 50+ today - UV index is high",
+                                imageName: "sun.max.fill",
+                                backgroundColor: Color.orange.opacity(0.7)
+                            )
+                            .tag(1)
+                            
+                            FeatureCard(
+                                title: "Sleep Quality",
+                                description: "Good sleep will improve cell regeneration",
+                                imageName: "moon.stars.fill",
+                                backgroundColor: Color.purple.opacity(0.7)
+                            )
+                            .tag(2)
+                        }
+                        .tabViewStyle(PageTabViewStyle(indexDisplayMode: .automatic))
+                        .frame(height: 160)
+                        
+                        // Page indicator
+                        HStack(spacing: 8) {
+                            ForEach(0..<3) { index in
+                                Circle()
+                                    .fill(activeIndex == index ? Color("SalmonPink") : Color.gray.opacity(0.3))
+                                    .frame(width: 8, height: 8)
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
+                    
+                    // Today's routine
+                    VStack(alignment: .leading, spacing: 16) {
+                        HStack {
+                            Text("Today's Routine")
+                                .font(.system(size: 22, weight: .bold, design: .rounded))
+                                .foregroundColor(Color("CharcoalGray"))
+                            
+                            Spacer()
+                            
+                            Button {
+                                // Action to view all routines
+                            } label: {
+                                Text("View All")
+                                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                                    .foregroundColor(Color("SalmonPink"))
+                            }
+                        }
+                        .padding(.horizontal)
+                        
+                        ForEach(1...3, id: \.self) { index in
+                            HStack {
+                                ZStack {
+                                    Circle()
+                                        .fill(Color("Peach").opacity(0.3))
+                                        .frame(width: 44, height: 44)
+                                    
+                                    Image(systemName: index == 1 ? "drop.fill" : (index == 2 ? "sparkles" : "sun.max.fill"))
+                                        .font(.system(size: 20))
+                                        .foregroundColor(Color("SalmonPink"))
+                                }
+                                
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(index == 1 ? "Morning Cleanse" : (index == 2 ? "Vitamin C Serum" : "Apply SPF 50"))
+                                        .font(.system(size: 16, weight: .medium, design: .rounded))
+                                        .foregroundColor(Color("CharcoalGray"))
+                                    
+                                    Text(index == 1 ? "Gentle face wash" : (index == 2 ? "Apply 2-3 drops" : "Reapply every 2 hours"))
+                                        .font(.system(size: 12, design: .rounded))
+                                        .foregroundColor(Color("CharcoalGray").opacity(0.6))
+                                }
+                                .padding(.leading, 8)
+                                
+                                Spacer()
+                                
+                                Button {
+                                    // Mark as complete action
+                                } label: {
+                                    ZStack {
+                                        Circle()
+                                            .stroke(Color("SalmonPink").opacity(0.3), lineWidth: 2)
+                                            .frame(width: 28, height: 28)
+                                        
+                                        Image(systemName: "checkmark")
+                                            .font(.system(size: 14, weight: .bold))
+                                            .foregroundColor(Color("SalmonPink").opacity(0.5))
+                                    }
+                                }
+                            }
+                            .padding(.vertical, 16)
+                            .padding(.horizontal, 20)
+                            .background(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .fill(Color.white)
+                                    .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 4)
+                            )
+                            .padding(.horizontal)
+                        }
+                    }
+                    
+                    // Quick Actions
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("Quick Actions")
+                            .font(.system(size: 22, weight: .bold, design: .rounded))
+                            .foregroundColor(Color("CharcoalGray"))
+                            .padding(.horizontal)
+                        
+                        HStack(spacing: 16) {
+                            QuickActionButton(title: "Track Symptoms", icon: "chart.line.uptrend.xyaxis", color: Color.green.opacity(0.8))
+                            
+                            QuickActionButton(title: "Log Water", icon: "drop.fill", color: Color.blue.opacity(0.8))
+                            
+                            QuickActionButton(title: "Add Products", icon: "plus.circle", color: Color("SalmonPink"))
+                        }
+                        .padding(.horizontal)
+                    }
+                    
+                    // Hormonal Wellness Tip
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("Hormonal Wellness Tip")
+                            .font(.system(size: 22, weight: .bold, design: .rounded))
+                            .foregroundColor(Color("CharcoalGray"))
+                            .padding(.horizontal)
+                        
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 20)
+                                .fill(Color.white)
+                                .shadow(color: .black.opacity(0.08), radius: 10, x: 0, y: 5)
+                            
+                            HStack(spacing: 16) {
+                                ZStack {
+                                    Circle()
+                                        .fill(Color("Peach").opacity(0.3))
+                                        .frame(width: 60, height: 60)
+                                    
+                                    Image(systemName: "lightbulb.fill")
+                                        .font(.system(size: 28))
+                                        .foregroundColor(Color("SalmonPink"))
+                                }
+                                
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("Ovulation Skin Care")
+                                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                                        .foregroundColor(Color("CharcoalGray"))
+                                    
+                                    Text("During ovulation, your skin tends to be more radiant naturally. Focus on hydration and sun protection rather than heavy products.")
+                                        .font(.system(size: 14, design: .rounded))
+                                        .foregroundColor(Color("CharcoalGray").opacity(0.8))
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
+                            }
+                            .padding(20)
+                        }
+                        .padding(.horizontal)
+                    }
+                    .padding(.bottom, 30)
+                }
+            }
+            .background(Color("SoftWhite"))
+            .navigationTitle("GlowPlan")
+            .navigationBarTitleDisplayMode(.large)
+        }
+    }
+}
+
+// Feature Card for the carousel
+struct FeatureCard: View {
+    let title: String
+    let description: String
+    let imageName: String
+    let backgroundColor: Color
+    
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 20)
+                .fill(backgroundColor)
+                .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+            
+            HStack {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text(title)
+                        .font(.system(size: 20, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
+                    
+                    Text(description)
+                        .font(.system(size: 14, design: .rounded))
+                        .foregroundColor(.white.opacity(0.9))
+                        .lineLimit(2)
+                }
+                .padding(20)
+                
+                Spacer()
+                
+                ZStack {
+                    Circle()
+                        .fill(Color.white.opacity(0.3))
+                        .frame(width: 60, height: 60)
+                    
+                    Image(systemName: imageName)
+                        .font(.system(size: 30))
+                        .foregroundColor(.white)
+                }
+                .padding(.trailing, 20)
+            }
+        }
+        .padding(.horizontal)
+    }
+}
+
+// Quick Action Button
+struct QuickActionButton: View {
+    let title: String
+    let icon: String
+    let color: Color
+    
+    var body: some View {
+        Button {
+            // Button action
+        } label: {
+            VStack(spacing: 12) {
+                ZStack {
+                    Circle()
+                        .fill(color.opacity(0.2))
+                        .frame(width: 56, height: 56)
+                    
+                    Image(systemName: icon)
+                        .font(.system(size: 24))
+                        .foregroundColor(color)
+                }
+                
+                Text(title)
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .foregroundColor(Color("CharcoalGray"))
+                    .multilineTextAlignment(.center)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 16)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color.white)
+                    .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
+            )
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+}
+
+// MARK: - Routines List View
+struct RoutinesListView: View {
+    @State private var selectedCategory = "Daily"
+    private let categories = ["Daily", "Weekly", "Monthly"]
+    
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Routines categories
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 12) {
+                            ForEach(categories, id: \.self) { category in
+                                Button {
+                                    selectedCategory = category
+                                } label: {
+                                    Text(category)
+                                        .font(.system(size: 16, weight: .medium, design: .rounded))
+                                        .foregroundColor(category == selectedCategory ? .white : Color("CharcoalGray"))
+                                        .padding(.horizontal, 20)
+                                        .padding(.vertical, 10)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 20)
+                                                .fill(category == selectedCategory ? Color("SalmonPink") : Color.white)
+                                                .shadow(color: .black.opacity(0.05), radius: 3, x: 0, y: 2)
+                                        )
+                                }
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
+                    .padding(.top, 16)
+                    
+                    // Morning routine
+                    RoutineSection(
+                        title: "Morning Routine",
+                        icon: "sun.max.fill",
+                        steps: [
+                            RoutineSimpleStep(number: 1, title: "Cleanse", description: "Gently wash face with lukewarm water"),
+                            RoutineSimpleStep(number: 2, title: "Apply Vitamin C", description: "Apply 2-3 drops to face and neck"),
+                            RoutineSimpleStep(number: 3, title: "Sunscreen", description: "Apply liberally to face and exposed skin")
+                        ]
+                    )
+                    
+                    // Evening routine
+                    RoutineSection(
+                        title: "Evening Routine",
+                        icon: "moon.stars.fill",
+                        steps: [
+                            RoutineSimpleStep(number: 1, title: "Double Cleanse", description: "Oil cleanser followed by water-based cleanser"),
+                            RoutineSimpleStep(number: 2, title: "Exfoliate", description: "Use 2x per week during ovulation"),
+                            RoutineSimpleStep(number: 3, title: "Moisturize", description: "Apply generous amount to face and neck")
+                        ]
+                    )
+                    
+                    // Add new routine button
+                    Button {
+                        // Action to add new routine
+                    } label: {
+                        HStack {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.system(size: 22))
+                            
+                            Text("Create New Routine")
+                                .font(.system(size: 16, weight: .semibold, design: .rounded))
+                        }
+                        .foregroundColor(Color("SalmonPink"))
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(
+                            RoundedRectangle(cornerRadius: 16)
+                                .stroke(Color("SalmonPink"), lineWidth: 2)
+                                .background(Color.white.cornerRadius(16))
+                        )
+                        .padding(.horizontal)
+                    }
+                    .padding(.top, 8)
+                    .padding(.bottom, 30)
+                }
+            }
+            .background(Color("SoftWhite"))
+            .navigationTitle("My Routines")
+        }
+    }
+}
+
+// Simplified Routine Step
+struct RoutineSimpleStep: Identifiable {
+    let id = UUID()
+    let number: Int
+    let title: String
+    let description: String
+}
+
+// Routine Section Component
+struct RoutineSection: View {
+    let title: String
+    let icon: String
+    let steps: [RoutineSimpleStep]
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Text(title)
+                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .foregroundColor(Color("CharcoalGray"))
+                
+                Spacer()
+                
+                Image(systemName: icon)
+                    .font(.system(size: 22))
+                    .foregroundColor(Color("SalmonPink"))
+            }
+            .padding(.horizontal)
+            
+            ForEach(steps) { step in
+                HStack {
+                    ZStack {
+                        Circle()
+                            .fill(Color("SalmonPink"))
+                            .frame(width: 36, height: 36)
+                        
+                        Text("\(step.number)")
+                            .font(.headline)
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(step.title)
+                            .font(.system(size: 18, weight: .semibold, design: .rounded))
+                            .foregroundColor(Color("CharcoalGray"))
+                        
+                        Text(step.description)
+                            .font(.system(size: 14, design: .rounded))
+                            .foregroundColor(Color("CharcoalGray").opacity(0.7))
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .padding(.leading, 12)
+                    
+                    Spacer()
+                    
+                    Button {
+                        // Edit action
+                    } label: {
+                        Image(systemName: "pencil")
+                            .font(.system(size: 16))
+                            .foregroundColor(Color("CharcoalGray").opacity(0.6))
+                            .padding(8)
+                            .background(
+                                Circle()
+                                    .fill(Color.gray.opacity(0.1))
+                            )
+                    }
+                }
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(Color.white)
+                        .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
+                )
+                .padding(.horizontal)
+            }
+        }
+    }
+}
+
+// MARK: - Recommendations View
+struct RecommendationsView: View {
+    let categories = ["Face", "Body", "Supplements", "Self-Care"]
+    @State private var selectedCategory = "Face"
+    
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Category selector
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 12) {
+                            ForEach(categories, id: \.self) { category in
+                                Button {
+                                    selectedCategory = category
+                                } label: {
+                                    Text(category)
+                                        .font(.system(size: 16, weight: .medium, design: .rounded))
+                                        .foregroundColor(selectedCategory == category ? .white : .charcoalGray)
+                                        .padding(.horizontal, 20)
+                                        .padding(.vertical, 8)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 20)
+                                                .fill(selectedCategory == category ? Color.salmonPink : Color.white)
+                                                .shadow(color: .black.opacity(0.05), radius: 3, x: 0, y: 2)
+                                        )
+                                }
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
+                    .padding(.top, 16)
+                    
+                    // Featured product
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 24)
+                            .fill(Color.peach.opacity(0.3))
+                            .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+                        
+                        HStack {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("Perfect for Your Cycle")
+                                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                    .foregroundColor(.salmonPink)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 6)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .fill(Color.white.opacity(0.7))
+                                    )
+                                
+                                Spacer()
+                                
+                                Text("Hydrating Serum")
+                                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                                    .foregroundColor(.charcoalGray)
+                                
+                                Text("Formulated for ovulation phase")
+                                    .font(.system(size: 16, design: .rounded))
+                                    .foregroundColor(.secondary)
+                                
+                                Spacer()
+                                
+                                Button {} label: {
+                                    Text("View Details")
+                                        .font(.system(size: 16, weight: .medium, design: .rounded))
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, 20)
+                                        .padding(.vertical, 8)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 16)
+                                                .fill(Color.salmonPink)
+                                        )
+                                }
+                            }
+                            .padding(20)
+                            
+                            Spacer()
+                            
+                            ZStack {
+                                Circle()
+                                    .fill(Color.white.opacity(0.7))
+                                    .frame(width: 120, height: 120)
+                                
+                                Image(systemName: "drop.fill")
+                                    .font(.system(size: 50))
+                                    .foregroundColor(.salmonPink)
+                            }
+                            .padding(.trailing, 20)
+                        }
+                    }
+                    .frame(height: 200)
+                    .padding(.horizontal)
+                    
+                    // Recommended products grid
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("Recommended for You")
+                            .font(.system(size: 20, weight: .bold, design: .rounded))
+                            .foregroundColor(.charcoalGray)
+                            .padding(.horizontal)
+                        
+                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
+                            ForEach(1...4, id: \.self) { index in
+                                VStack {
+                                    ZStack {
+                                        RoundedRectangle(cornerRadius: 16)
+                                            .fill(Color.white)
+                                            .frame(height: 160)
+                                            .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+                                        
+                                        VStack {
+                                            ZStack {
+                                                Circle()
+                                                    .fill(Color.peach.opacity(0.3))
+                                                    .frame(width: 80, height: 80)
+                                                
+                                                Image(systemName: ["sparkles", "drop.fill", "leaf.fill", "sun.max.fill"][index - 1])
+                                                    .font(.system(size: 30))
+                                                    .foregroundColor(.salmonPink)
+                                            }
+                                            
+                                            Text(["Brightening Mask", "Hydrating Toner", "Natural Cleanser", "SPF 50 Sunscreen"][index - 1])
+                                                .font(.system(size: 14, weight: .medium, design: .rounded))
+                                                .foregroundColor(.charcoalGray)
+                                                .multilineTextAlignment(.center)
+                                                .lineLimit(2)
+                                                .frame(height: 40)
+                                            
+                                            Text("$\([24, 18, 22, 30][index - 1])")
+                                                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                                .foregroundColor(.salmonPink)
+                                        }
+                                        .padding(8)
+                                    }
+                                }
+                            }
+                        }
+                        .padding(.horizontal)
+                        .padding(.bottom, 20)
+                    }
+                }
+            }
+            .background(Color.softWhite)
+            .navigationTitle("Recommendations")
+        }
+    }
+}
+
+// MARK: - Chat View
+struct ChatView: View {
+    @State private var messageText = ""
+    @State private var messages: [(content: String, isUser: Bool, timestamp: Date)] = [
+        ("Hello! I'm your GlowBot skincare assistant. How can I help you today?", false, Date(timeIntervalSinceNow: -3600)),
+        ("I've been noticing more breakouts during my period. What should I do?", true, Date(timeIntervalSinceNow: -3500)),
+        ("That's very common due to hormonal fluctuations! During your period, your estrogen levels drop and testosterone can become more dominant, leading to increased oil production.", false, Date(timeIntervalSinceNow: -3400)),
+        ("I recommend using a gentle salicylic acid cleanser in the days leading up to your period, and adding a non-comedogenic moisturizer to keep your skin balanced.", false, Date(timeIntervalSinceNow: -3300))
+    ]
+    @State private var isTyping = false
+    
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 0) {
+                // Chat messages
+                ScrollView {
+                    VStack(spacing: 0) {
+                        ForEach(0..<messages.count, id: \.self) { index in
+                            MessageBubble(
+                                content: messages[index].content,
+                                isUser: messages[index].isUser,
+                                timestamp: messages[index].timestamp
+                            )
+                        }
+                        
+                        if isTyping {
+                            TypingIndicator()
+                                .padding(.top, 8)
+                        }
+                    }
+                    .padding(.vertical, 12)
+                }
+                .background(Color.softWhite)
+                
+                // Message input field
+                VStack(spacing: 0) {
+                    Divider()
+                    
+                    HStack {
+                        TextField("Type a message...", text: $messageText)
+                            .padding(12)
+                            .background(
+                                RoundedRectangle(cornerRadius: 20)
+                                    .fill(Color.white)
+                                    .shadow(color: .black.opacity(0.05), radius: 3, x: 0, y: 1)
+                            )
+                        
+                        Button {
+                            sendMessage()
+                        } label: {
+                            Image(systemName: "arrow.up.circle.fill")
+                                .font(.system(size: 32))
+                                .foregroundColor(.salmonPink)
+                        }
+                        .disabled(messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    }
+                    .padding(.horizontal)
+                    .padding(.vertical, 12)
+                    .background(Color.softWhite)
+                }
+            }
+            .navigationTitle("GlowBot")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        // Information action
+                    } label: {
+                        Image(systemName: "info.circle")
+                            .foregroundColor(.salmonPink)
+                    }
+                }
+            }
+        }
+    }
+    
+    private func sendMessage() {
+        let trimmedMessage = messageText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedMessage.isEmpty else { return }
+        
+        let newMessage = (content: trimmedMessage, isUser: true, timestamp: Date())
+        messages.append(newMessage)
+        messageText = ""
+        
+        // Simulate bot typing
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            isTyping = true
+            
+            // Simulate bot response after typing
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                isTyping = false
+                let botResponse = (content: "I'm analyzing your question about \"\(trimmedMessage)\". Let me provide some personalized advice for your skin type and current cycle phase.", isUser: false, timestamp: Date())
+                messages.append(botResponse)
+            }
+        }
+    }
+}
+
+// MARK: - Account View
+struct AccountView: View {
+    @State private var name = "Taylor Swift"
+    @State private var email = "taylor@example.com"
+    @State private var birthdate = Date()
+    @State private var skinType = "Combination"
+    @State private var notifications = true
+    @State private var cycleTracking = true
+    
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Profile header
+                    VStack(spacing: 16) {
+                        ZStack {
+                            Circle()
+                                .fill(Color.peach)
+                                .frame(width: 100, height: 100)
+                                .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 3)
+                            
+                            Text("TS")
+                                .font(.system(size: 36, weight: .bold, design: .rounded))
+                                .foregroundColor(.white)
+                        }
+                        .padding(.top, 20)
+                        
+                        Text(name)
+                            .font(.system(size: 24, weight: .bold, design: .rounded))
+                            .foregroundColor(.charcoalGray)
+                        
+                        Text(email)
+                            .font(.system(size: 16, design: .rounded))
+                            .foregroundColor(.secondary)
+                        
+                        Button {
+                            // Edit profile action
+                        } label: {
+                            Text("Edit Profile")
+                                .font(.system(size: 16, weight: .medium, design: .rounded))
+                                .foregroundColor(.salmonPink)
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 8)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .stroke(Color.salmonPink, lineWidth: 1)
+                                )
+                        }
+                    }
+                    
+                    // Settings sections
+                    VStack(spacing: 8) {
+                        settingSection(title: "Account", items: [
+                            ("person.fill", "Personal Information"),
+                            ("lock.fill", "Privacy & Security"),
+                            ("bell.fill", "Notifications")
+                        ])
+                        
+                        settingSection(title: "Preferences", items: [
+                            ("heart.fill", "Skin Type: \(skinType)"),
+                            ("calendar", "Cycle Tracking: \(cycleTracking ? "On" : "Off")"),
+                            ("moon.stars.fill", "Dark Mode: Off")
+                        ])
+                        
+                        settingSection(title: "Support", items: [
+                            ("questionmark.circle.fill", "Help Center"),
+                            ("envelope.fill", "Contact Us"),
+                            ("star.fill", "Rate the App")
+                        ])
+                    }
+                    .padding(.bottom, 20)
+                    
+                    Button {
+                        // Logout action
+                    } label: {
+                        Text("Log Out")
+                            .font(.system(size: 16, weight: .medium, design: .rounded))
+                            .foregroundColor(.red)
+                            .padding(.vertical, 12)
+                            .frame(maxWidth: .infinity)
+                            .background(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .stroke(Color.red, lineWidth: 1)
+                            )
+                    }
+                    .padding(.horizontal)
+                    .padding(.bottom, 32)
+                }
+            }
+            .background(Color.softWhite)
+            .navigationTitle("My Account")
+        }
+    }
+    
+    private func settingSection(title: String, items: [(icon: String, text: String)]) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text(title)
+                .font(.system(size: 18, weight: .bold, design: .rounded))
+                .foregroundColor(.charcoalGray)
+                .padding(.horizontal)
+            
+            VStack(spacing: 0) {
+                ForEach(0..<items.count, id: \.self) { index in
+                    Button {
+                        // Setting action
+                    } label: {
+                        HStack {
+                            Image(systemName: items[index].icon)
+                                .font(.system(size: 18))
+                                .foregroundColor(.salmonPink)
+                                .frame(width: 30)
+                            
+                            Text(items[index].text)
+                                .font(.system(size: 16, design: .rounded))
+                                .foregroundColor(.charcoalGray)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 14))
+                                .foregroundColor(.gray)
+                        }
+                        .padding(.vertical, 14)
+                        .padding(.horizontal)
+                        .background(Color.white)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    
+                    if index < items.count - 1 {
+                        Divider()
+                            .padding(.leading, 55)
+                    }
+                }
+            }
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color.white)
+                    .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+            )
+            .padding(.horizontal)
+        }
+    }
+}
+
+#if DEBUG
+struct MainTabView_Previews: PreviewProvider {
+    static var previews: some View {
+        MainTabView()
+    }
+}
+#endif 
