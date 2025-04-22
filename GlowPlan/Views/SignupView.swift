@@ -90,6 +90,9 @@ struct SignupView: View {
             }
             .navigationTitle(isShowingLogin ? "Login" : "Create Account")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarColorScheme(.dark, for: .navigationBar)
+            .toolbarBackground(Color("SalmonPink"), for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
         }
     }
 }

@@ -5,23 +5,41 @@ struct MainTabView: View {
     
     init() {
         // Set the tab bar appearance
-        let appearance = UITabBarAppearance()
-        appearance.backgroundColor = UIColor.white
+        let tabBarAppearance = UITabBarAppearance()
+        tabBarAppearance.backgroundColor = UIColor.white
         
         let itemAppearance = UITabBarItemAppearance()
         itemAppearance.normal.iconColor = UIColor.gray
         itemAppearance.normal.titleTextAttributes = [.foregroundColor: UIColor.gray]
-        itemAppearance.selected.iconColor = UIColor(red: 1.0, green: 0.55, blue: 0.55, alpha: 1.0) // Close to #FF8C8C
-        itemAppearance.selected.titleTextAttributes = [.foregroundColor: UIColor(red: 1.0, green: 0.55, blue: 0.55, alpha: 1.0)]
         
-        appearance.stackedLayoutAppearance = itemAppearance
-        appearance.inlineLayoutAppearance = itemAppearance
-        appearance.compactInlineLayoutAppearance = itemAppearance
+        // Convert SalmonPink color to UIColor
+        let salmonPinkUIColor = UIColor(red: 1.0, green: 0.55, blue: 0.55, alpha: 1.0) // #FF8C8C
         
-        UITabBar.appearance().standardAppearance = appearance
+        itemAppearance.selected.iconColor = salmonPinkUIColor
+        itemAppearance.selected.titleTextAttributes = [.foregroundColor: salmonPinkUIColor]
+        
+        tabBarAppearance.stackedLayoutAppearance = itemAppearance
+        tabBarAppearance.inlineLayoutAppearance = itemAppearance
+        tabBarAppearance.compactInlineLayoutAppearance = itemAppearance
+        
+        UITabBar.appearance().standardAppearance = tabBarAppearance
         if #available(iOS 15.0, *) {
-            UITabBar.appearance().scrollEdgeAppearance = appearance
+            UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance
         }
+        
+        // Set the navigation bar appearance with SalmonPink color
+        let navigationBarAppearance = UINavigationBarAppearance()
+        navigationBarAppearance.configureWithOpaqueBackground()
+        navigationBarAppearance.backgroundColor = salmonPinkUIColor
+        navigationBarAppearance.titleTextAttributes = [.foregroundColor: UIColor.white]
+        navigationBarAppearance.largeTitleTextAttributes = [.foregroundColor: UIColor.white]
+        
+        UINavigationBar.appearance().standardAppearance = navigationBarAppearance
+        UINavigationBar.appearance().compactAppearance = navigationBarAppearance
+        UINavigationBar.appearance().scrollEdgeAppearance = navigationBarAppearance
+        
+        // Set the navigation bar items tint color to white for better contrast
+        UINavigationBar.appearance().tintColor = .white
     }
     
     var body: some View {
@@ -57,14 +75,6 @@ struct MainTabView: View {
                 .tag(4)
         }
         .accentColor(Color("SalmonPink"))
-        .onAppear {
-            // Hide back button when presented
-            let appearance = UINavigationBarAppearance()
-            appearance.configureWithOpaqueBackground()
-            UINavigationBar.appearance().standardAppearance = appearance
-            UINavigationBar.appearance().compactAppearance = appearance
-            UINavigationBar.appearance().scrollEdgeAppearance = appearance
-        }
     }
 }
 
@@ -396,6 +406,9 @@ struct HomeView: View {
             .background(Color("SoftWhite"))
             .navigationTitle("GlowPlan")
             .navigationBarTitleDisplayMode(.large)
+            .toolbarColorScheme(.dark, for: .navigationBar)
+            .toolbarBackground(Color("SalmonPink"), for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
         }
     }
 }
@@ -562,8 +575,11 @@ struct RoutinesListView: View {
                     .padding(.bottom, 30)
                 }
             }
-            .background(Color("SoftWhite"))
+            .background(Color.softWhite)
             .navigationTitle("My Routines")
+            .toolbarColorScheme(.dark, for: .navigationBar)
+            .toolbarBackground(Color("SalmonPink"), for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
         }
     }
 }
@@ -793,6 +809,9 @@ struct RecommendationsView: View {
             }
             .background(Color.softWhite)
             .navigationTitle("Recommendations")
+            .toolbarColorScheme(.dark, for: .navigationBar)
+            .toolbarBackground(Color("SalmonPink"), for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
         }
     }
 }
@@ -866,10 +885,13 @@ struct ChatView: View {
                         // Information action
                     } label: {
                         Image(systemName: "info.circle")
-                            .foregroundColor(.salmonPink)
+                            .foregroundColor(.white)
                     }
                 }
             }
+            .toolbarColorScheme(.dark, for: .navigationBar)
+            .toolbarBackground(Color("SalmonPink"), for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
         }
     }
     
@@ -986,6 +1008,9 @@ struct AccountView: View {
             }
             .background(Color.softWhite)
             .navigationTitle("My Account")
+            .toolbarColorScheme(.dark, for: .navigationBar)
+            .toolbarBackground(Color("SalmonPink"), for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
         }
     }
     

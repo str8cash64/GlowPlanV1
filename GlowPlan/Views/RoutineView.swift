@@ -87,6 +87,9 @@ struct RoutineView: View {
             }
             .navigationTitle("Your Routine")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarColorScheme(.dark, for: .navigationBar)
+            .toolbarBackground(Color("SalmonPink"), for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
         }
     }
 }

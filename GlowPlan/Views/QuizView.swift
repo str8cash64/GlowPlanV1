@@ -3,11 +3,12 @@ import SwiftUI
 struct QuizQuestion {
     let question: String
     let options: [String]
+    let allowsMultipleSelections: Bool
 }
 
 struct QuizView: View {
     @State private var currentQuestionIndex = 0
-    @State private var selectedAnswers: [Int] = []
+    @State private var selectedAnswers: [[Int]] = Array(repeating: [], count: 5) // Store multiple selections per question
     @State private var navigateToRoutine = false
     
     let questions: [QuizQuestion] = [
@@ -18,7 +19,8 @@ struct QuizView: View {
                 "Normal",
                 "Oily",
                 "Combination"
-            ]
+            ],
+            allowsMultipleSelections: false
         ),
         QuizQuestion(
             question: "What skin concerns do you have?",
@@ -27,7 +29,8 @@ struct QuizView: View {
                 "Sun damage",
                 "Fine lines",
                 "Uneven tone"
-            ]
+            ],
+            allowsMultipleSelections: true
         ),
         QuizQuestion(
             question: "How does your skin react to environmental changes?",
@@ -36,7 +39,8 @@ struct QuizView: View {
                 "Drier than usual",
                 "More sensitive",
                 "No major changes"
-            ]
+            ],
+            allowsMultipleSelections: true
         ),
         QuizQuestion(
             question: "What's your typical sleep quality?",
@@ -45,7 +49,8 @@ struct QuizView: View {
                 "OK, 5-7 hours",
                 "Poor, under 5 hours",
                 "Varies a lot"
-            ]
+            ],
+            allowsMultipleSelections: false
         ),
         QuizQuestion(
             question: "How stressed do you feel on most days?",
@@ -54,7 +59,8 @@ struct QuizView: View {
                 "Moderate",
                 "High stress",
                 "Varies significantly"
-            ]
+            ],
+            allowsMultipleSelections: false
         )
     ]
     
@@ -79,28 +85,44 @@ struct QuizView: View {
                         .padding(.horizontal, 24)
                         .padding(.top, 10)
                     
+                    // For multiple selection questions, show helper text
+                    if questions[currentQuestionIndex].allowsMultipleSelections {
+                        Text("Select all that apply")
+                            .font(.system(size: 16, design: .rounded))
+                            .foregroundColor(Color("CharcoalGray").opacity(0.7))
+                            .padding(.top, 5)
+                    }
+                    
                     Spacer()
                     
                     // Answer options
                     VStack(spacing: 16) {
                         ForEach(0..<questions[currentQuestionIndex].options.count, id: \.self) { index in
                             let option = questions[currentQuestionIndex].options[index]
+                            let isSelected = selectedAnswers[currentQuestionIndex].contains(index)
+                            
                             Button {
                                 selectAnswer(index: index)
                             } label: {
                                 HStack {
                                     Text(option)
                                         .font(.system(size: 18, weight: .medium, design: .rounded))
-                                        .foregroundColor(Color("CharcoalGray"))
+                                        .foregroundColor(isSelected ? .white : Color("CharcoalGray"))
                                         .padding(.vertical, 16)
                                         .padding(.leading, 16)
                                     
                                     Spacer()
+                                    
+                                    if isSelected {
+                                        Image(systemName: "checkmark")
+                                            .foregroundColor(.white)
+                                            .padding(.trailing, 16)
+                                    }
                                 }
                                 .frame(maxWidth: .infinity)
                                 .background(
                                     RoundedRectangle(cornerRadius: 16)
-                                        .fill(Color.white)
+                                        .fill(isSelected ? Color("SalmonPink") : Color.white)
                                         .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
                                 )
                             }
@@ -119,12 +141,16 @@ struct QuizView: View {
                             } label: {
                                 SubmitButtonContent()
                             }
+                            .disabled(selectedAnswers[currentQuestionIndex].isEmpty)
+                            .opacity(selectedAnswers[currentQuestionIndex].isEmpty ? 0.5 : 1.0)
                         } else {
                             Button {
                                 currentQuestionIndex += 1
                             } label: {
                                 NextButtonContent()
                             }
+                            .disabled(selectedAnswers[currentQuestionIndex].isEmpty)
+                            .opacity(selectedAnswers[currentQuestionIndex].isEmpty ? 0.5 : 1.0)
                         }
                     }
                     .padding(.horizontal)
@@ -136,6 +162,9 @@ struct QuizView: View {
             }
             .navigationTitle("Skin Quiz")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarColorScheme(.dark, for: .navigationBar)
+            .toolbarBackground(Color("SalmonPink"), for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
         }
     }
     
@@ -173,16 +202,19 @@ struct QuizView: View {
     }
     
     private func selectAnswer(index: Int) {
-        if selectedAnswers.count > currentQuestionIndex {
-            selectedAnswers[currentQuestionIndex] = index
-        } else {
-            selectedAnswers.append(index)
-        }
+        let currentQuestion = questions[currentQuestionIndex]
         
-        // Auto-advance after short delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            if !isLastQuestion {
-                currentQuestionIndex += 1
+        // If this question doesn't allow multiple selections, clear any existing selections
+        if !currentQuestion.allowsMultipleSelections {
+            selectedAnswers[currentQuestionIndex] = [index]
+        } else {
+            // For multiple selection questions
+            if selectedAnswers[currentQuestionIndex].contains(index) {
+                // If already selected, deselect it
+                selectedAnswers[currentQuestionIndex].removeAll { $0 == index }
+            } else {
+                // Otherwise add to selections
+                selectedAnswers[currentQuestionIndex].append(index)
             }
         }
     }
