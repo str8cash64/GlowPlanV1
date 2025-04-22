@@ -31,7 +31,7 @@ struct RoutineView: View {
                                 .multilineTextAlignment(.center)
                             
                             Text("Based on your quiz results, we've created the perfect routine for your skin needs")
-                                .font(.system(size: 16, design: .rounded))
+                                .font(.system(size: 17, weight: .medium, design: .rounded))
                                 .foregroundColor(Color("CharcoalGray"))
                                 .multilineTextAlignment(.center)
                                 .padding(.horizontal, 32)

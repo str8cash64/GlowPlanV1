@@ -28,11 +28,13 @@ struct RoutineStepCard: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text(title)
                         .font(.headline)
+                        .fontWeight(.semibold)
                         .foregroundColor(Color("CharcoalGray"))
                     
                     Text(description)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .font(.system(size: 15))
+                        .foregroundColor(Color("CharcoalGray"))
+                        .lineSpacing(2)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 .padding(.leading, 8)
@@ -44,11 +46,11 @@ struct RoutineStepCard: View {
                 } label: {
                     Image(systemName: "pencil")
                         .font(.system(size: 16))
-                        .foregroundColor(Color("CharcoalGray").opacity(0.6))
+                        .foregroundColor(Color("CharcoalGray"))
                         .padding(8)
                         .background(
                             Circle()
-                                .fill(Color.gray.opacity(0.1))
+                                .fill(Color.gray.opacity(0.15))
                         )
                 }
             }
