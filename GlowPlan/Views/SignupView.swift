@@ -4,6 +4,8 @@ struct SignupView: View {
     @State private var email = ""
     @State private var password = ""
     @State private var isShowingLogin = false
+    @State private var navigateToHome = false
+    @Environment(\.presentationMode) var presentationMode
     
     var body: some View {
         NavigationStack {
@@ -52,7 +54,10 @@ struct SignupView: View {
                     Spacer()
                     
                     // Sign up/Login button
-                    NavigationLink(destination: MainTabView()) {
+                    Button(action: {
+                        // Simulating authentication - in a real app, you would validate credentials here
+                        navigateToHome = true
+                    }) {
                         Text(isShowingLogin ? "Login" : "Sign Up")
                             .font(.headline)
                             .fontWeight(.semibold)
@@ -66,7 +71,9 @@ struct SignupView: View {
                             .foregroundColor(.white)
                             .padding(.horizontal)
                     }
-                    .buttonStyle(PlainButtonStyle())
+                    .fullScreenCover(isPresented: $navigateToHome) {
+                        MainTabView()
+                    }
                     
                     // Toggle between signup and login
                     Button {

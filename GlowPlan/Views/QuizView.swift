@@ -8,6 +8,7 @@ struct QuizQuestion {
 struct QuizView: View {
     @State private var currentQuestionIndex = 0
     @State private var selectedAnswers: [Int] = []
+    @State private var navigateToRoutine = false
     
     let questions: [QuizQuestion] = [
         QuizQuestion(
@@ -113,8 +114,8 @@ struct QuizView: View {
                     // Bottom button area
                     HStack {
                         if isLastQuestion {
-                            NavigationLink {
-                                RoutineView()
+                            Button {
+                                navigateToRoutine = true
                             } label: {
                                 SubmitButtonContent()
                             }
@@ -128,6 +129,9 @@ struct QuizView: View {
                     }
                     .padding(.horizontal)
                     .padding(.bottom, 48)
+                }
+                .fullScreenCover(isPresented: $navigateToRoutine) {
+                    RoutineView()
                 }
             }
             .navigationTitle("Skin Quiz")

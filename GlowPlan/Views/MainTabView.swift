@@ -57,6 +57,14 @@ struct MainTabView: View {
                 .tag(4)
         }
         .accentColor(Color("SalmonPink"))
+        .onAppear {
+            // Hide back button when presented
+            let appearance = UINavigationBarAppearance()
+            appearance.configureWithOpaqueBackground()
+            UINavigationBar.appearance().standardAppearance = appearance
+            UINavigationBar.appearance().compactAppearance = appearance
+            UINavigationBar.appearance().scrollEdgeAppearance = appearance
+        }
     }
 }
 

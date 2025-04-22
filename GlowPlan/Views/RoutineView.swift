@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct RoutineView: View {
+    @State private var navigateToSignup = false
+    
     let routineSteps: [(number: Int, title: String, description: String, products: [String])] = [
         (number: 1, title: "Morning Cleanse", description: "Start with a gentle foaming cleanser to remove overnight buildup without stripping your skin", products: ["Gentle Foaming Cleanser", "Micellar Water"]),
         (number: 2, title: "Tone & Hydrate", description: "Apply alcohol-free toner to balance your skin's pH level", products: ["Balancing Toner"]),
@@ -30,7 +32,7 @@ struct RoutineView: View {
                             
                             Text("Based on your quiz results, we've created the perfect routine for your skin needs")
                                 .font(.system(size: 16, design: .rounded))
-                                .foregroundColor(.secondary)
+                                .foregroundColor(Color("CharcoalGray"))
                                 .multilineTextAlignment(.center)
                                 .padding(.horizontal, 32)
                         }
@@ -42,8 +44,8 @@ struct RoutineView: View {
                                 RoutineStepCard(
                                     stepNumber: step.number,
                                     title: step.title,
-                                    description: step.description,
-                                    )
+                                    description: step.description
+                                )
                             }
                         }
                         .padding(.bottom, 100) // Extra padding for button
@@ -54,7 +56,9 @@ struct RoutineView: View {
                     Spacer()
                     
                     // Continue button at bottom
-                    NavigationLink(destination: SignupView()) {
+                    Button(action: {
+                        navigateToSignup = true
+                    }) {
                         Text("Continue to Save Routine")
                             .font(.headline)
                             .fontWeight(.semibold)
@@ -68,7 +72,6 @@ struct RoutineView: View {
                             .foregroundColor(.white)
                             .padding(.horizontal)
                     }
-                    .buttonStyle(PlainButtonStyle())
                     .padding(.bottom, 32)
                     .background(
                         Rectangle()
@@ -77,6 +80,9 @@ struct RoutineView: View {
                             .shadow(color: .black.opacity(0.05), radius: 10, x: 0, y: -5)
                             .ignoresSafeArea()
                     )
+                }
+                .fullScreenCover(isPresented: $navigateToSignup) {
+                    SignupView()
                 }
             }
             .navigationTitle("Your Routine")
