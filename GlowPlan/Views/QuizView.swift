@@ -2,12 +2,7 @@ import SwiftUI
 
 struct QuizQuestion {
     let question: String
-    let options: [QuizOption]
-}
-
-struct QuizOption {
-    let emoji: String
-    let text: String
+    let options: [String]
 }
 
 struct QuizView: View {
@@ -18,46 +13,46 @@ struct QuizView: View {
         QuizQuestion(
             question: "What's your skin type?",
             options: [
-                QuizOption(emoji: "💧", text: "Dry"),
-                QuizOption(emoji: "✨", text: "Normal"),
-                QuizOption(emoji: "🛢️", text: "Oily"),
-                QuizOption(emoji: "🔄", text: "Combination")
+                "Dry",
+                "Normal",
+                "Oily",
+                "Combination"
             ]
         ),
         QuizQuestion(
             question: "What skin concerns do you have?",
             options: [
-                QuizOption(emoji: "🔴", text: "Acne"),
-                QuizOption(emoji: "🌞", text: "Sun damage"),
-                QuizOption(emoji: "🧵", text: "Fine lines"),
-                QuizOption(emoji: "🌈", text: "Uneven tone")
+                "Acne",
+                "Sun damage",
+                "Fine lines",
+                "Uneven tone"
             ]
         ),
         QuizQuestion(
-            question: "How does your skin change during your cycle?",
+            question: "How does your skin react to environmental changes?",
             options: [
-                QuizOption(emoji: "📈", text: "More breakouts"),
-                QuizOption(emoji: "🧴", text: "Drier than usual"),
-                QuizOption(emoji: "🌡️", text: "More sensitive"),
-                QuizOption(emoji: "🤷‍♀️", text: "No major changes")
+                "More breakouts",
+                "Drier than usual",
+                "More sensitive",
+                "No major changes"
             ]
         ),
         QuizQuestion(
             question: "What's your typical sleep quality?",
             options: [
-                QuizOption(emoji: "😴", text: "Great, 7-9 hours"),
-                QuizOption(emoji: "😐", text: "OK, 5-7 hours"),
-                QuizOption(emoji: "😫", text: "Poor, under 5 hours"),
-                QuizOption(emoji: "🔄", text: "Varies a lot")
+                "Great, 7-9 hours",
+                "OK, 5-7 hours",
+                "Poor, under 5 hours",
+                "Varies a lot"
             ]
         ),
         QuizQuestion(
             question: "How stressed do you feel on most days?",
             options: [
-                QuizOption(emoji: "😌", text: "Low stress"),
-                QuizOption(emoji: "😊", text: "Moderate"),
-                QuizOption(emoji: "😰", text: "High stress"),
-                QuizOption(emoji: "🎢", text: "Varies significantly")
+                "Low stress",
+                "Moderate",
+                "High stress",
+                "Varies significantly"
             ]
         )
     ]
@@ -93,14 +88,11 @@ struct QuizView: View {
                                 selectAnswer(index: index)
                             } label: {
                                 HStack {
-                                    Text(option.emoji)
-                                        .font(.system(size: 28))
-                                        .padding(.leading, 8)
-                                    
-                                    Text(option.text)
+                                    Text(option)
                                         .font(.system(size: 18, weight: .medium, design: .rounded))
                                         .foregroundColor(Color("CharcoalGray"))
                                         .padding(.vertical, 16)
+                                        .padding(.leading, 16)
                                     
                                     Spacer()
                                 }

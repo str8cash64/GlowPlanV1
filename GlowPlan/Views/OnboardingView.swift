@@ -6,28 +6,18 @@ struct OnboardingView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                // Background gradient
-                LinearGradient(
-                    gradient: Gradient(colors: [Color("SoftWhite"), Color("Peach")]),
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .ignoresSafeArea()
+                // Background color
+                Color("SoftWhite").ignoresSafeArea()
                 
                 VStack(spacing: 40) {
                     Spacer()
                     
-                    // Logo placeholder
-                    ZStack {
-                        Circle()
-                            .fill(Color.white.opacity(0.7))
-                            .frame(width: 160, height: 160)
-                            .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
-                        
-                        Image(systemName: "sparkles")
-                            .font(.system(size: 70))
-                            .foregroundColor(Color("SalmonPink"))
-                    }
+                    // Skincare illustration
+                    Image("skincare_illustration")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(height: 300)
+                        .padding(.horizontal, 20)
                     
                     VStack(spacing: 16) {
                         Text("Welcome to GlowPlan")
@@ -37,7 +27,7 @@ struct OnboardingView: View {
                         
                         Text("Personalized skincare & wellness just for you")
                             .font(.system(size: 18, weight: .medium, design: .rounded))
-                            .foregroundColor(Color("CharcoalGray").opacity(0.8))
+                            .foregroundColor(Color("CharcoalGray"))
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 32)
                     }

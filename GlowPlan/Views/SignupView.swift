@@ -26,7 +26,7 @@ struct SignupView: View {
                         
                         Text(isShowingLogin ? "Sign in to access your saved routines" : "Save your personalized skincare routine and track your progress")
                             .font(.system(size: 16, design: .rounded))
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Color("CharcoalGray"))
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 32)
                     }

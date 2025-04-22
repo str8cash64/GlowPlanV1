@@ -107,7 +107,7 @@ struct HomeView: View {
                     .padding(.horizontal)
                     .padding(.top, 20)
                     
-                    // Cycle tracker card with improved visual design
+                    // Skincare Routine Tracker card
                     ZStack {
                         RoundedRectangle(cornerRadius: 24)
                             .fill(
@@ -122,11 +122,11 @@ struct HomeView: View {
                         VStack(spacing: 16) {
                             HStack {
                                 VStack(alignment: .leading, spacing: 8) {
-                                    Text("Cycle Day 15")
+                                    Text("Routine Tracker")
                                         .font(.system(size: 26, weight: .bold, design: .rounded))
                                         .foregroundColor(.white)
                                     
-                                    Text("Ovulation Phase")
+                                    Text("Stay consistent with your skincare")
                                         .font(.system(size: 18, weight: .medium, design: .rounded))
                                         .foregroundColor(.white.opacity(0.9))
                                 }
@@ -139,12 +139,12 @@ struct HomeView: View {
                                         .frame(width: 64, height: 64)
                                     
                                     Circle()
-                                        .trim(from: 0, to: 0.5)
+                                        .trim(from: 0, to: 0.7)
                                         .stroke(Color.white, lineWidth: 6)
                                         .frame(width: 64, height: 64)
                                         .rotationEffect(.degrees(-90))
                                     
-                                    Text("15/30")
+                                    Text("70%")
                                         .font(.system(size: 16, weight: .bold, design: .rounded))
                                         .foregroundColor(.white)
                                 }
@@ -165,7 +165,7 @@ struct HomeView: View {
                                             .foregroundColor(.white)
                                     }
                                     
-                                    Text("Hydrate")
+                                    Text("Cleanse")
                                         .font(.system(size: 14, weight: .medium, design: .rounded))
                                         .foregroundColor(.white)
                                 }
@@ -178,12 +178,12 @@ struct HomeView: View {
                                             .fill(Color.white.opacity(0.2))
                                             .frame(width: 48, height: 48)
                                         
-                                        Image(systemName: "allergens")
+                                        Image(systemName: "sparkles")
                                             .font(.system(size: 22))
                                             .foregroundColor(.white)
                                     }
                                     
-                                    Text("Glow")
+                                    Text("Treat")
                                         .font(.system(size: 14, weight: .medium, design: .rounded))
                                         .foregroundColor(.white)
                                 }
@@ -221,8 +221,8 @@ struct HomeView: View {
                         
                         TabView(selection: $activeIndex) {
                             FeatureCard(
-                                title: "Skin Hydration",
-                                description: "Your skin needs extra hydration during ovulation",
+                                title: "Hydration Tip",
+                                description: "Apply moisturizer to slightly damp skin for better absorption",
                                 imageName: "drop.fill",
                                 backgroundColor: Color.blue.opacity(0.7)
                             )
@@ -230,15 +230,15 @@ struct HomeView: View {
                             
                             FeatureCard(
                                 title: "UV Protection",
-                                description: "Use SPF 50+ today - UV index is high",
+                                description: "Use SPF 50+ daily, even on cloudy days for skin health",
                                 imageName: "sun.max.fill",
                                 backgroundColor: Color.orange.opacity(0.7)
                             )
                             .tag(1)
                             
                             FeatureCard(
-                                title: "Sleep Quality",
-                                description: "Good sleep will improve cell regeneration",
+                                title: "Nighttime Routine",
+                                description: "Use retinol products at night for best results and less sun sensitivity",
                                 imageName: "moon.stars.fill",
                                 backgroundColor: Color.purple.opacity(0.7)
                             )

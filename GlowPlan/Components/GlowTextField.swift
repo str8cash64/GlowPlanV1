@@ -14,6 +14,7 @@ struct GlowTextField: View {
             
             if isSecure {
                 SecureField(placeholder, text: $text)
+                    .foregroundColor(Color("CharcoalGray"))
                     .padding()
                     .background(
                         RoundedRectangle(cornerRadius: 12)
@@ -26,6 +27,7 @@ struct GlowTextField: View {
                     )
             } else {
                 TextField(placeholder, text: $text)
+                    .foregroundColor(Color("CharcoalGray"))
                     .padding()
                     .background(
                         RoundedRectangle(cornerRadius: 12)
