@@ -1,7 +1,6 @@
 import SwiftUI
+import UIKit
 // We're using the GlowPlanModels namespace for our data models
-// Importing extensions from our project
-// import GlowPlan.ViewExtensions 
 
 // Use the new namespace model
 struct RoutineTrackerView: View {
@@ -10,6 +9,7 @@ struct RoutineTrackerView: View {
     @State private var showingRoutineDetail = false
     @State private var selectedRoutine: GlowPlanModels.Routine?
     @State private var selectedTab = "Morning"
+    @State private var showHistoryView = false
     
     // Use sample data from shared models
     private let routines = GlowPlanModels.sampleRoutines
@@ -24,7 +24,7 @@ struct RoutineTrackerView: View {
         ScrollView {
             VStack(spacing: 24) {
                 // Overall progress card
-                ProgressCardView(routines: routines)
+                ProgressCardView(routines: routines, showHistoryView: $showHistoryView)
                     .padding(.horizontal)
                 
                 // Routine navigation tabs
@@ -114,11 +114,28 @@ struct RoutineTrackerView: View {
         .background(Color("SoftWhite"))
         .navigationTitle("Routine Tracker")
         .navigationBarTitleDisplayMode(.inline)
-        .navigationBarColor(backgroundColor: UIColor(named: "SalmonPink") ?? .systemPink, textColor: .white)
+        .applyGlowNavigationBarStyle(backgroundColor: UIColor(named: "SalmonPink") ?? .systemPink, textColor: .white)
         .sheet(isPresented: $showingRoutineDetail) {
             if let routine = selectedRoutine {
                 RoutineDetailView(routine: routine)
             }
+        }
+        .fullScreenCover(isPresented: $showHistoryView) {
+            NavigationStack {
+                HistoryView()
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button {
+                                showHistoryView = false
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundColor(.white)
+                                    .imageScale(.large)
+                            }
+                        }
+                    }
+            }
+            .accentColor(Color("SalmonPink"))
         }
     }
     
@@ -259,6 +276,7 @@ struct StreakBadge: View {
 // Progress card component
 struct ProgressCardView: View {
     let routines: [GlowPlanModels.Routine]
+    @Binding var showHistoryView: Bool
     
     private var overallCompletion: Double {
         var totalSteps = 0
@@ -303,7 +321,7 @@ struct ProgressCardView: View {
                 
                 // View History button
                 Button(action: {
-                    // View history action
+                    showHistoryView = true
                 }) {
                     Text("View History")
                         .font(.headline)
@@ -315,6 +333,7 @@ struct ProgressCardView: View {
                                 .stroke(Color("SalmonPink"), lineWidth: 1)
                         )
                 }
+                .buttonStyle(PlainButtonStyle())
             }
             
             Divider()
@@ -591,43 +610,10 @@ struct AchievementBadge: View {
     }
 }
 
-// Extension to apply colors to the navigation bar
-extension View {
-    func navigationBarColor(backgroundColor: UIColor, textColor: UIColor) -> some View {
-        self.modifier(NavigationBarModifier(backgroundColor: backgroundColor, textColor: textColor))
-    }
-}
-
-// Navigation bar modifier to apply custom colors
-struct NavigationBarModifier: ViewModifier {
-    var backgroundColor: UIColor
-    var textColor: UIColor
-    
-    init(backgroundColor: UIColor, textColor: UIColor) {
-        self.backgroundColor = backgroundColor
-        self.textColor = textColor
-        
-        let coloredAppearance = UINavigationBarAppearance()
-        coloredAppearance.configureWithOpaqueBackground()
-        coloredAppearance.backgroundColor = backgroundColor
-        coloredAppearance.titleTextAttributes = [.foregroundColor: textColor]
-        coloredAppearance.largeTitleTextAttributes = [.foregroundColor: textColor]
-        
-        UINavigationBar.appearance().standardAppearance = coloredAppearance
-        UINavigationBar.appearance().compactAppearance = coloredAppearance
-        UINavigationBar.appearance().scrollEdgeAppearance = coloredAppearance
-        UINavigationBar.appearance().tintColor = textColor
-    }
-    
-    func body(content: Content) -> some View {
-        content
-    }
-}
-
 #if DEBUG
 struct RoutineTrackerView_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationView {
+        NavigationStack {
             RoutineTrackerView()
         }
     }

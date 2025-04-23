@@ -1,4 +1,6 @@
 import SwiftUI
+// Import needed views explicitly
+import Foundation
 // Add a comment to ensure RoutineTrackerView is accessible
 // Make sure RoutineTrackerView.swift is added to the project target
 
@@ -52,9 +54,9 @@ struct MainTabView: View {
                 }
                 .tag(0)
             
-            RoutinesListView()
+            RoutineTrackerView()
                 .tabItem {
-                    Label("Routines", systemImage: "heart.fill")
+                    Label("Tracker", systemImage: "list.clipboard.fill")
                 }
                 .tag(1)
             
@@ -128,112 +130,109 @@ struct HomeView: View {
                     .padding(.top, 20)
                     
                     // Skincare Routine Tracker card
-                    NavigationLink(destination: RoutineTrackerView()) {
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 24)
-                                .fill(
-                                    LinearGradient(
-                                        gradient: Gradient(colors: [Color("Peach"), Color("SalmonPink").opacity(0.7)]),
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 24)
+                            .fill(
+                                LinearGradient(
+                                    gradient: Gradient(colors: [Color("Peach"), Color("SalmonPink").opacity(0.7)]),
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
                                 )
-                                .shadow(color: .black.opacity(0.15), radius: 10, x: 0, y: 5)
-                            
-                            VStack(spacing: 16) {
-                                HStack {
-                                    VStack(alignment: .leading, spacing: 8) {
-                                        Text("Routine Tracker")
-                                            .font(.system(size: 26, weight: .bold, design: .rounded))
-                                            .foregroundColor(.white)
-                                        
-                                        Text("Stay consistent with your skincare")
-                                            .font(.system(size: 18, weight: .medium, design: .rounded))
-                                            .foregroundColor(.white.opacity(0.9))
-                                    }
+                            )
+                            .shadow(color: .black.opacity(0.15), radius: 10, x: 0, y: 5)
+                        
+                        VStack(spacing: 16) {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("Daily Progress")
+                                        .font(.system(size: 26, weight: .bold, design: .rounded))
+                                        .foregroundColor(.white)
                                     
-                                    Spacer()
-                                    
-                                    ZStack {
-                                        Circle()
-                                            .stroke(Color.white.opacity(0.3), lineWidth: 6)
-                                            .frame(width: 64, height: 64)
-                                        
-                                        Circle()
-                                            .trim(from: 0, to: 0.7)
-                                            .stroke(Color.white, lineWidth: 6)
-                                            .frame(width: 64, height: 64)
-                                            .rotationEffect(.degrees(-90))
-                                        
-                                        Text("70%")
-                                            .font(.system(size: 16, weight: .bold, design: .rounded))
-                                            .foregroundColor(.white)
-                                    }
+                                    Text("Your skin journey is looking great!")
+                                        .font(.system(size: 18, weight: .medium, design: .rounded))
+                                        .foregroundColor(.white.opacity(0.9))
                                 }
                                 
-                                Divider()
-                                    .background(Color.white.opacity(0.5))
+                                Spacer()
                                 
-                                HStack(spacing: 20) {
-                                    VStack(spacing: 10) {
-                                        ZStack {
-                                            Circle()
-                                                .fill(Color.white.opacity(0.2))
-                                                .frame(width: 48, height: 48)
-                                            
-                                            Image(systemName: "drop.fill")
-                                                .font(.system(size: 22))
-                                                .foregroundColor(.white)
-                                        }
-                                        
-                                        Text("Cleanse")
-                                            .font(.system(size: 14, weight: .medium, design: .rounded))
-                                                .foregroundColor(.white)
-                                    }
+                                ZStack {
+                                    Circle()
+                                        .stroke(Color.white.opacity(0.3), lineWidth: 6)
+                                        .frame(width: 64, height: 64)
                                     
-                                    Spacer()
+                                    Circle()
+                                        .trim(from: 0, to: 0.7)
+                                        .stroke(Color.white, lineWidth: 6)
+                                        .frame(width: 64, height: 64)
+                                        .rotationEffect(.degrees(-90))
                                     
-                                    VStack(spacing: 10) {
-                                        ZStack {
-                                            Circle()
-                                                .fill(Color.white.opacity(0.2))
-                                                .frame(width: 48, height: 48)
-                                            
-                                            Image(systemName: "sparkles")
-                                                .font(.system(size: 22))
-                                                .foregroundColor(.white)
-                                        }
-                                        
-                                        Text("Treat")
-                                            .font(.system(size: 14, weight: .medium, design: .rounded))
-                                                .foregroundColor(.white)
-                                    }
-                                    
-                                    Spacer()
-                                    
-                                    VStack(spacing: 10) {
-                                        ZStack {
-                                            Circle()
-                                                .fill(Color.white.opacity(0.2))
-                                                .frame(width: 48, height: 48)
-                                            
-                                            Image(systemName: "sun.max.fill")
-                                                .font(.system(size: 22))
-                                                .foregroundColor(.white)
-                                        }
-                                        
-                                        Text("Protect")
-                                            .font(.system(size: 14, weight: .medium, design: .rounded))
-                                                .foregroundColor(.white)
-                                    }
+                                    Text("70%")
+                                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                                        .foregroundColor(.white)
                                 }
                             }
-                            .padding(24)
+                            
+                            Divider()
+                                .background(Color.white.opacity(0.5))
+                            
+                            HStack(spacing: 20) {
+                                VStack(spacing: 10) {
+                                    ZStack {
+                                        Circle()
+                                            .fill(Color.white.opacity(0.2))
+                                            .frame(width: 48, height: 48)
+                                        
+                                        Image(systemName: "drop.fill")
+                                            .font(.system(size: 22))
+                                            .foregroundColor(.white)
+                                    }
+                                    
+                                    Text("Cleanse")
+                                        .font(.system(size: 14, weight: .medium, design: .rounded))
+                                        .foregroundColor(.white)
+                                }
+                                
+                                Spacer()
+                                
+                                VStack(spacing: 10) {
+                                    ZStack {
+                                        Circle()
+                                            .fill(Color.white.opacity(0.2))
+                                            .frame(width: 48, height: 48)
+                                        
+                                        Image(systemName: "sparkles")
+                                            .font(.system(size: 22))
+                                            .foregroundColor(.white)
+                                    }
+                                    
+                                    Text("Treat")
+                                        .font(.system(size: 14, weight: .medium, design: .rounded))
+                                        .foregroundColor(.white)
+                                }
+                                
+                                Spacer()
+                                
+                                VStack(spacing: 10) {
+                                    ZStack {
+                                        Circle()
+                                            .fill(Color.white.opacity(0.2))
+                                            .frame(width: 48, height: 48)
+                                        
+                                        Image(systemName: "sun.max.fill")
+                                            .font(.system(size: 22))
+                                            .foregroundColor(.white)
+                                    }
+                                    
+                                    Text("Protect")
+                                        .font(.system(size: 14, weight: .medium, design: .rounded))
+                                        .foregroundColor(.white)
+                                }
+                            }
                         }
-                        .frame(height: 200)
-                        .padding(.horizontal)
+                        .padding(24)
                     }
-                    .buttonStyle(PlainButtonStyle())
+                    .frame(height: 200)
+                    .padding(.horizontal)
                     
                     // Feature cards carousel
                     VStack(alignment: .leading, spacing: 16) {
@@ -362,6 +361,7 @@ struct HomeView: View {
                                 QuickActionButton(title: "Routine Tracker", icon: "checklist", color: Color.purple.opacity(0.8))
                             }
                             .buttonStyle(PlainButtonStyle())
+                            .accessibilityIdentifier("routineTrackerLink")
                             
                             QuickActionButton(title: "Track Symptoms", icon: "chart.line.uptrend.xyaxis", color: Color.green.opacity(0.8))
                             
