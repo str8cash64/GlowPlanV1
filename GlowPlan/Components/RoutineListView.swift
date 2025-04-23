@@ -1,7 +1,8 @@
 import SwiftUI
 
 struct RoutineListView: View {
-    @State private var routines: [Routine] = sampleRoutines
+    // Using GlowPlanModels namespace to avoid conflicts with model names
+    @State private var routines: [GlowPlanModels.Routine] = GlowPlanModels.sampleRoutines
     
     var body: some View {
         NavigationStack {
@@ -12,12 +13,7 @@ struct RoutineListView: View {
                 ScrollView {
                     VStack(spacing: 16) {
                         ForEach(routines) { routine in
-                            NavigationLink(destination: RoutineDetailView(
-                                routineName: routine.name,
-                                timeOfDay: routine.timeOfDay,
-                                isActive: routine.isActive,
-                                steps: routine.steps
-                            )) {
+                            NavigationLink(destination: RoutineDetailView(routine: routine)) {
                                 RoutineCardView(routine: routine)
                             }
                             .buttonStyle(PlainButtonStyle())
@@ -44,7 +40,7 @@ struct RoutineListView: View {
 }
 
 struct RoutineCardView: View {
-    let routine: Routine
+    let routine: GlowPlanModels.Routine
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -117,52 +113,6 @@ struct RoutineCardView: View {
         .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
     }
 }
-
-struct Routine: Identifiable {
-    let id = UUID()
-    let name: String
-    let timeOfDay: String
-    let isActive: Bool
-    let steps: [RoutineStep]
-}
-
-// Sample data
-let sampleRoutines = [
-    Routine(
-        name: "Morning Skincare",
-        timeOfDay: "Morning",
-        isActive: true,
-        steps: [
-            RoutineStep(title: "Wash face with cleanser", isCompleted: true),
-            RoutineStep(title: "Apply toner", isCompleted: true),
-            RoutineStep(title: "Apply serum", isCompleted: false),
-            RoutineStep(title: "Apply moisturizer", isCompleted: false),
-            RoutineStep(title: "Apply sunscreen (SPF 30+)", isCompleted: false)
-        ]
-    ),
-    Routine(
-        name: "Evening Skincare",
-        timeOfDay: "Evening",
-        isActive: true,
-        steps: [
-            RoutineStep(title: "Remove makeup", isCompleted: true),
-            RoutineStep(title: "Cleanse face", isCompleted: true),
-            RoutineStep(title: "Apply toner", isCompleted: true),
-            RoutineStep(title: "Apply night serum", isCompleted: false),
-            RoutineStep(title: "Apply night cream", isCompleted: false)
-        ]
-    ),
-    Routine(
-        name: "Weekly Treatment",
-        timeOfDay: "Weekend",
-        isActive: false,
-        steps: [
-            RoutineStep(title: "Exfoliate", isCompleted: false),
-            RoutineStep(title: "Apply face mask", isCompleted: false),
-            RoutineStep(title: "Apply special treatment", isCompleted: false)
-        ]
-    )
-]
 
 #if DEBUG
 struct RoutineListView_Previews: PreviewProvider {

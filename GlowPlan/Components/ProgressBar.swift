@@ -1,23 +1,25 @@
 import SwiftUI
 
 struct ProgressBar: View {
-    let value: Double
+    var value: Double
+    var height: CGFloat = 12
+    var backgroundColor: Color = Color.gray.opacity(0.2)
+    var foregroundColor: Color = Color("SalmonPink")
     
     var body: some View {
         GeometryReader { geometry in
             ZStack(alignment: .leading) {
-                Rectangle()
-                    .fill(Color("Peach").opacity(0.3))
-                    .cornerRadius(12)
-                    .frame(width: geometry.size.width, height: 12)
+                RoundedRectangle(cornerRadius: height / 2)
+                    .fill(backgroundColor)
+                    .frame(width: geometry.size.width, height: height)
                 
-                Rectangle()
-                    .fill(Color("SalmonPink"))
-                    .cornerRadius(12)
-                    .frame(width: min(CGFloat(self.value) * geometry.size.width, geometry.size.width), height: 12)
+                RoundedRectangle(cornerRadius: height / 2)
+                    .fill(foregroundColor)
+                    .frame(width: min(CGFloat(value) * geometry.size.width, geometry.size.width), height: height)
+                    .animation(.easeInOut, value: value)
             }
         }
-        .frame(height: 12)
+        .frame(height: height)
     }
 }
 

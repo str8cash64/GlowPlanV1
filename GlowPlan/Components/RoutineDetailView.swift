@@ -4,13 +4,26 @@ struct RoutineDetailView: View {
     let routineName: String
     let timeOfDay: String
     let isActive: Bool
-    @State private var steps: [RoutineStep]
+    @State private var steps: [RoutineDetailStep]
     
-    init(routineName: String, timeOfDay: String, isActive: Bool, steps: [RoutineStep]) {
+    init(routineName: String, timeOfDay: String, isActive: Bool, steps: [RoutineDetailStep]) {
         self.routineName = routineName
         self.timeOfDay = timeOfDay
         self.isActive = isActive
         self._steps = State(initialValue: steps)
+    }
+    
+    // Update initializer to use the shared model
+    init(routine: GlowPlanModels.Routine) {
+        self.routineName = routine.name
+        self.timeOfDay = routine.timeOfDay
+        self.isActive = routine.isActive
+        
+        // Convert shared RoutineStep to RoutineDetailStep
+        let convertedSteps = routine.steps.map { step in
+            RoutineDetailStep(title: step.name, isCompleted: step.isCompleted)
+        }
+        self._steps = State(initialValue: convertedSteps)
     }
     
     var body: some View {
@@ -119,7 +132,8 @@ struct RoutineDetailView: View {
     }
 }
 
-struct RoutineStep: Identifiable {
+// Renamed to avoid namespace conflicts
+struct RoutineDetailStep: Identifiable {
     let id = UUID()
     let title: String
     var isCompleted: Bool
@@ -134,11 +148,11 @@ struct RoutineDetailView_Previews: PreviewProvider {
                 timeOfDay: "Morning",
                 isActive: true,
                 steps: [
-                    RoutineStep(title: "Wash face with cleanser", isCompleted: true),
-                    RoutineStep(title: "Apply toner", isCompleted: true),
-                    RoutineStep(title: "Apply serum", isCompleted: false),
-                    RoutineStep(title: "Apply moisturizer", isCompleted: false),
-                    RoutineStep(title: "Apply sunscreen (SPF 30+)", isCompleted: false)
+                    RoutineDetailStep(title: "Wash face with cleanser", isCompleted: true),
+                    RoutineDetailStep(title: "Apply toner", isCompleted: true),
+                    RoutineDetailStep(title: "Apply serum", isCompleted: false),
+                    RoutineDetailStep(title: "Apply moisturizer", isCompleted: false),
+                    RoutineDetailStep(title: "Apply sunscreen (SPF 30+)", isCompleted: false)
                 ]
             )
         }
