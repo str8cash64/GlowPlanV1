@@ -10,6 +10,7 @@ struct RoutineTrackerView: View {
     @State private var selectedRoutine: GlowPlanModels.Routine?
     @State private var selectedTab = "Morning"
     @State private var showHistoryView = false
+    @State private var showingRoutineRunner = false
     
     // Use sample data from shared models
     private let routines = GlowPlanModels.sampleRoutines
@@ -29,10 +30,29 @@ struct RoutineTrackerView: View {
                 
                 // Routine navigation tabs
                 VStack(spacing: 16) {
-                    Text(selectedTab == "Morning" ? "Morning Routine" : "Evening Routine")
-                        .font(.title2.bold())
-                        .foregroundColor(Color("CharcoalGray"))
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                    // Add start button
+                    HStack {
+                        Text(selectedTab == "Morning" ? "Morning Routine" : "Evening Routine")
+                            .font(.title2.bold())
+                            .foregroundColor(Color("CharcoalGray"))
+                        
+                        Spacer()
+                        
+                        Button(action: {
+                            // Find the selected routine
+                            selectedRoutine = routines.first { $0.timeOfDay == selectedTab }
+                            showingRoutineRunner = true
+                        }) {
+                            Text("Start Now")
+                                .font(.subheadline.bold())
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(Color("SalmonPink"))
+                                .cornerRadius(20)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     
                     // Tab buttons
                     HStack(spacing: 0) {
@@ -136,6 +156,11 @@ struct RoutineTrackerView: View {
                     }
             }
             .accentColor(Color("SalmonPink"))
+        }
+        .navigationDestination(isPresented: $showingRoutineRunner) {
+            if let routine = selectedRoutine {
+                RoutineRunnerView(routine: routine)
+            }
         }
     }
     
