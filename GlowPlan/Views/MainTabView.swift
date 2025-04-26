@@ -481,14 +481,19 @@ struct HomeView: View {
         let db = Firestore.firestore()
         db.collection("users").document(userId).getDocument { document, error in
             if let document = document, document.exists, 
-               let data = document.data(),
-               let name = data["displayName"] as? String, !name.isEmpty {
-                self.userName = name
-            } else {
-                // Try to get display name from Auth user as fallback
-                if let user = Auth.auth().currentUser, 
-                   let displayName = user.displayName, 
-                   !displayName.isEmpty {
+               let data = document.data() {
+                // Look for fullName first (what we store during signup)
+                if let fullName = data["fullName"] as? String, !fullName.isEmpty {
+                    self.userName = fullName
+                } 
+                // Fallback to displayName if fullName is not found
+                else if let displayName = data["displayName"] as? String, !displayName.isEmpty {
+                    self.userName = displayName
+                } 
+                // Try to get display name from Auth user as last resort
+                else if let user = Auth.auth().currentUser, 
+                    let displayName = user.displayName, 
+                    !displayName.isEmpty {
                     self.userName = displayName
                 }
             }
@@ -1268,10 +1273,16 @@ struct AccountView: View {
             db.collection("users").document(user.uid).getDocument { document, error in
                 if let document = document, document.exists {
                     if let data = document.data() {
-                        // Extract display name if available
-                        if let displayName = data["displayName"] as? String, !displayName.isEmpty {
+                        // Look for fullName first (what we store during signup)
+                        if let fullName = data["fullName"] as? String, !fullName.isEmpty {
+                            self.name = fullName
+                        }
+                        // Fallback to displayName if fullName not found
+                        else if let displayName = data["displayName"] as? String, !displayName.isEmpty {
                             self.name = displayName
-                        } else if let displayName = user.displayName, !displayName.isEmpty {
+                        } 
+                        // Try Auth user display name as last resort
+                        else if let displayName = user.displayName, !displayName.isEmpty {
                             self.name = displayName
                         }
                     }
