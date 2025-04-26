@@ -11,45 +11,44 @@ struct RoutineView: View {
         (number: 5, title: "Sun Protection", description: "Always finish with SPF 30+ to protect against UV damage, even on cloudy days", products: ["SPF 50 Sunscreen", "Tinted Moisturizer with SPF"])
     ]
     
+    // Convert routineSteps to the format expected by RoutineSaveHandlerView
+    private var convertedRoutineSteps: [RoutineStep] {
+        return routineSteps.map { step in
+            return RoutineStep(
+                name: step.title,
+                product: step.products.first ?? "",
+                description: step.description
+            )
+        }
+    }
+    
+    // Create a skin profile to pass to SignupView
+    private var skinProfile: UserSkinProfile {
+        let profile = UserSkinProfile()
+        profile.skinType = "Combination"
+        profile.primaryConcern = "General"
+        profile.sensitivityLevel = "Normal"
+        return profile
+    }
+    
     var body: some View {
         NavigationStack {
             ZStack {
                 Color("SoftWhite").ignoresSafeArea()
                 
                 ScrollView {
-                    VStack(spacing: 32) {
-                        // Header
-                        VStack(spacing: 16) {
-                            Image(systemName: "sparkles")
-                                .font(.system(size: 36))
-                                .foregroundColor(Color("SalmonPink"))
-                                .padding(.top, 20)
-                            
-                            Text("Your Personalized Routine")
-                                .font(.system(size: 28, weight: .bold, design: .rounded))
-                                .foregroundColor(Color("CharcoalGray"))
-                                .multilineTextAlignment(.center)
-                            
-                            Text("Based on your quiz results, we've created the perfect routine for your skin needs")
-                                .font(.system(size: 17, weight: .medium, design: .rounded))
-                                .foregroundColor(Color("CharcoalGray"))
-                                .multilineTextAlignment(.center)
-                                .padding(.horizontal, 32)
+                    VStack(spacing: 20) {
+                        ForEach(routineSteps, id: \.number) { step in
+                            RoutineViewStepCard(
+                                number: step.number,
+                                title: step.title,
+                                description: step.description,
+                                products: step.products
+                            )
                         }
-                        .padding(.top, 20)
-                        
-                        // Routine steps
-                        VStack(spacing: 16) {
-                            ForEach(routineSteps, id: \.number) { step in
-                                RoutineStepCard(
-                                    stepNumber: step.number,
-                                    title: step.title,
-                                    description: step.description
-                                )
-                            }
-                        }
-                        .padding(.bottom, 100) // Extra padding for button
+                        .padding(.horizontal)
                     }
+                    .padding(.top, 24)
                 }
                 
                 VStack {
@@ -82,7 +81,7 @@ struct RoutineView: View {
                     )
                 }
                 .fullScreenCover(isPresented: $navigateToSignup) {
-                    SignupView()
+                    SignupView(skinProfile: skinProfile, skinRoutine: convertedRoutineSteps)
                 }
             }
             .navigationTitle("Your Routine")
@@ -91,6 +90,69 @@ struct RoutineView: View {
             .toolbarBackground(Color("SalmonPink"), for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
         }
+    }
+}
+
+struct RoutineViewStepCard: View {
+    let number: Int
+    let title: String
+    let description: String
+    let products: [String]
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top, spacing: 16) {
+                // Step number circle
+                ZStack {
+                    Circle()
+                        .fill(Color("SalmonPink").opacity(0.2))
+                        .frame(width: 36, height: 36)
+                    
+                    Text("\(number)")
+                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                        .foregroundColor(Color("SalmonPink"))
+                }
+                
+                VStack(alignment: .leading, spacing: 8) {
+                    // Step title
+                    Text(title)
+                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                        .foregroundColor(Color("CharcoalGray"))
+                    
+                    // Step description
+                    Text(description)
+                        .font(.system(size: 14, design: .rounded))
+                        .foregroundColor(Color("CharcoalGray").opacity(0.8))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            
+            // Products
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Recommended products:")
+                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .foregroundColor(Color("CharcoalGray"))
+                
+                ForEach(products, id: \.self) { product in
+                    HStack(spacing: 8) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 14))
+                            .foregroundColor(Color("SalmonPink"))
+                        
+                        Text(product)
+                            .font(.system(size: 14, design: .rounded))
+                            .foregroundColor(Color("CharcoalGray"))
+                    }
+                }
+            }
+            .padding(.leading, 52)
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color.white)
+                .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
+        )
     }
 }
 

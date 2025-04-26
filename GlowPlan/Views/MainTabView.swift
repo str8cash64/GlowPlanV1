@@ -1,8 +1,23 @@
 import SwiftUI
 // Import needed views explicitly
 import Foundation
+import FirebaseAuth
+import FirebaseFirestore
+// Import our components
 // Add a comment to ensure RoutineTrackerView is accessible
 // Make sure RoutineTrackerView.swift is added to the project target
+
+extension Color {
+    func withUniqueID(_ id: String) -> some View {
+        self.id(id)
+    }
+}
+
+extension Text {
+    func withUniqueTag(_ tag: String) -> some View {
+        self.id(tag)
+    }
+}
 
 struct MainTabView: View {
     @State private var selectedTab = 0
@@ -66,7 +81,7 @@ struct MainTabView: View {
                 }
                 .tag(2)
             
-            ChatView()
+            ChatAssistantView()
                 .tabItem {
                     Label("Chat", systemImage: "message.fill")
                 }
@@ -86,6 +101,8 @@ struct MainTabView: View {
 struct HomeView: View {
     @State private var showingNotifications = false
     @State private var activeIndex = 0
+    @State private var userName = "User" // Default value
+    @State private var showOnboarding = false // Add state for debug
     
     var body: some View {
         NavigationStack {
@@ -94,7 +111,7 @@ struct HomeView: View {
                     // Welcome and profile section
                     HStack(alignment: .center) {
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("Good Morning, Taylor")
+                            Text("Good Morning, \(userName)")
                                 .font(.system(size: 28, weight: .bold, design: .rounded))
                                 .foregroundColor(Color("CharcoalGray"))
                             
@@ -104,6 +121,23 @@ struct HomeView: View {
                         }
                         
                         Spacer()
+                        
+                        // DEBUG BUTTON
+                        Button {
+                            showOnboarding = true
+                        } label: {
+                            ZStack {
+                                Circle()
+                                    .fill(Color.orange.opacity(0.2))
+                                    .frame(width: 44, height: 44)
+                                    .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
+                                
+                                Image(systemName: "arrow.clockwise")
+                                    .font(.system(size: 18))
+                                    .foregroundColor(Color.orange)
+                                    .padding(12)
+                            }
+                        }
                         
                         Button {
                             showingNotifications.toggle()
@@ -246,7 +280,8 @@ struct HomeView: View {
                                 title: "Hydration Tip",
                                 description: "Apply moisturizer to slightly damp skin for better absorption",
                                 imageName: "drop.fill",
-                                backgroundColor: Color.blue.opacity(0.7)
+                                backgroundColor: Color.blue.opacity(0.7),
+                                cardID: "hydration-tip"
                             )
                             .tag(0)
                             
@@ -254,7 +289,8 @@ struct HomeView: View {
                                 title: "UV Protection",
                                 description: "Use SPF 50+ daily, even on cloudy days for skin health",
                                 imageName: "sun.max.fill",
-                                backgroundColor: Color.orange.opacity(0.7)
+                                backgroundColor: Color.orange.opacity(0.7),
+                                cardID: "uv-protection"
                             )
                             .tag(1)
                             
@@ -262,7 +298,8 @@ struct HomeView: View {
                                 title: "Nighttime Routine",
                                 description: "Use retinol products at night for best results and less sun sensitivity",
                                 imageName: "moon.stars.fill",
-                                backgroundColor: Color.purple.opacity(0.7)
+                                backgroundColor: Color.purple.opacity(0.7),
+                                cardID: "nighttime-routine"
                             )
                             .tag(2)
                         }
@@ -271,10 +308,11 @@ struct HomeView: View {
                         
                         // Page indicator
                         HStack(spacing: 8) {
-                            ForEach(0..<3) { index in
+                            ForEach(0..<3, id: \.self) { index in
                                 Circle()
                                     .fill(activeIndex == index ? Color("SalmonPink") : Color.gray.opacity(0.3))
                                     .frame(width: 8, height: 8)
+                                    .id("PageIndicator-\(index)")
                             }
                         }
                         .padding(.horizontal)
@@ -299,24 +337,30 @@ struct HomeView: View {
                         }
                         .padding(.horizontal)
                         
-                        ForEach(1...3, id: \.self) { index in
+                        let routineSteps = [
+                            (icon: "drop.fill", title: "Morning Cleanse", description: "Gentle face wash"),
+                            (icon: "sparkles", title: "Vitamin C Serum", description: "Apply 2-3 drops"),
+                            (icon: "sun.max.fill", title: "Apply SPF 50", description: "Reapply every 2 hours")
+                        ]
+                        
+                        ForEach(Array(routineSteps.enumerated()), id: \.offset) { index, step in
                             HStack {
                                 ZStack {
                                     Circle()
                                         .fill(Color("Peach").opacity(0.3))
                                         .frame(width: 44, height: 44)
                                     
-                                    Image(systemName: index == 1 ? "drop.fill" : (index == 2 ? "sparkles" : "sun.max.fill"))
+                                    Image(systemName: step.icon)
                                         .font(.system(size: 20))
                                         .foregroundColor(Color("SalmonPink"))
                                 }
                                 
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text(index == 1 ? "Morning Cleanse" : (index == 2 ? "Vitamin C Serum" : "Apply SPF 50"))
+                                    Text(step.title)
                                         .font(.system(size: 16, weight: .medium, design: .rounded))
                                         .foregroundColor(Color("CharcoalGray"))
                                     
-                                    Text(index == 1 ? "Gentle face wash" : (index == 2 ? "Apply 2-3 drops" : "Reapply every 2 hours"))
+                                    Text(step.description)
                                         .font(.system(size: 12, design: .rounded))
                                         .foregroundColor(Color("CharcoalGray").opacity(0.6))
                                 }
@@ -417,6 +461,25 @@ struct HomeView: View {
             .toolbarColorScheme(.dark, for: .navigationBar)
             .toolbarBackground(Color("SalmonPink"), for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
+            .onAppear {
+                fetchUserName()
+            }
+            .fullScreenCover(isPresented: $showOnboarding) {
+                OnboardingView()
+            }
+        }
+    }
+    
+    private func fetchUserName() {
+        guard let userId = FirebaseManager.shared.userId else { return }
+        
+        let db = Firestore.firestore()
+        db.collection("users").document(userId).getDocument { document, error in
+            if let document = document, document.exists, 
+               let data = document.data(),
+               let name = data["displayName"] as? String {
+                self.userName = name
+            }
         }
     }
 }
@@ -427,23 +490,36 @@ struct FeatureCard: View {
     let description: String
     let imageName: String
     let backgroundColor: Color
+    let cardID: String  // Add a unique ID property
+    
+    // Add default parameter for backward compatibility
+    init(title: String, description: String, imageName: String, backgroundColor: Color, cardID: String = UUID().uuidString) {
+        self.title = title
+        self.description = description
+        self.imageName = imageName
+        self.backgroundColor = backgroundColor
+        self.cardID = cardID
+    }
     
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 20)
                 .fill(backgroundColor)
                 .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+                .id("FeatureCardBG-\(cardID)")
             
             HStack {
                 VStack(alignment: .leading, spacing: 12) {
                     Text(title)
                         .font(.system(size: 20, weight: .bold, design: .rounded))
                         .foregroundColor(.white)
+                        .id("FeatureCardTitle-\(cardID)")
                     
                     Text(description)
                         .font(.system(size: 14, design: .rounded))
                         .foregroundColor(.white.opacity(0.9))
                         .lineLimit(2)
+                        .id("FeatureCardDesc-\(cardID)")
                 }
                 .padding(20)
                 
@@ -453,10 +529,12 @@ struct FeatureCard: View {
                     Circle()
                         .fill(Color.white.opacity(0.3))
                         .frame(width: 60, height: 60)
+                        .id("FeatureCardIconBG-\(cardID)")
                     
                     Image(systemName: imageName)
                         .font(.system(size: 30))
                         .foregroundColor(.white)
+                        .id("FeatureCardIcon-\(cardID)")
                 }
                 .padding(.trailing, 20)
             }
@@ -515,7 +593,7 @@ struct RoutinesListView: View {
                     // Routines categories
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 12) {
-                            ForEach(categories, id: \.self) { category in
+                            ForEach(Array(zip(categories.indices, categories)), id: \.0) { index, category in
                                 Button {
                                     selectedCategory = category
                                 } label: {
@@ -530,6 +608,7 @@ struct RoutinesListView: View {
                                                 .shadow(color: .black.opacity(0.05), radius: 3, x: 0, y: 2)
                                         )
                                 }
+                                .id("CategoryButton-\(index)") // Add explicit ID
                             }
                         }
                         .padding(.horizontal)
@@ -685,7 +764,7 @@ struct RecommendationsView: View {
                     // Category selector
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 12) {
-                            ForEach(categories, id: \.self) { category in
+                            ForEach(Array(zip(categories.indices, categories)), id: \.0) { index, category in
                                 Button {
                                     selectedCategory = category
                                 } label: {
@@ -700,6 +779,7 @@ struct RecommendationsView: View {
                                                 .shadow(color: .black.opacity(0.05), radius: 3, x: 0, y: 2)
                                         )
                                 }
+                                .id("RecommendationCategory-\(index)")
                             }
                         }
                         .padding(.horizontal)
@@ -775,7 +855,7 @@ struct RecommendationsView: View {
                             .padding(.horizontal)
                         
                         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-                            ForEach(1...4, id: \.self) { index in
+                            ForEach(0..<4, id: \.self) { index in
                                 VStack {
                                     ZStack {
                                         RoundedRectangle(cornerRadius: 16)
@@ -789,19 +869,19 @@ struct RecommendationsView: View {
                                                     .fill(Color.peach.opacity(0.3))
                                                     .frame(width: 80, height: 80)
                                                 
-                                                Image(systemName: ["sparkles", "drop.fill", "leaf.fill", "sun.max.fill"][index - 1])
+                                                Image(systemName: ["sparkles", "drop.fill", "leaf.fill", "sun.max.fill"][index])
                                                     .font(.system(size: 30))
                                                     .foregroundColor(.salmonPink)
                                             }
                                             
-                                            Text(["Brightening Mask", "Hydrating Toner", "Natural Cleanser", "SPF 50 Sunscreen"][index - 1])
+                                            Text(["Brightening Mask", "Hydrating Toner", "Natural Cleanser", "SPF 50 Sunscreen"][index])
                                                 .font(.system(size: 14, weight: .medium, design: .rounded))
                                                 .foregroundColor(.charcoalGray)
                                                 .multilineTextAlignment(.center)
                                                 .lineLimit(2)
                                                 .frame(height: 40)
                                             
-                                            Text("$\([24, 18, 22, 30][index - 1])")
+                                            Text("$\([24, 18, 22, 30][index])")
                                                 .font(.system(size: 14, weight: .semibold, design: .rounded))
                                                 .foregroundColor(.salmonPink)
                                         }
@@ -825,13 +905,13 @@ struct RecommendationsView: View {
 }
 
 // MARK: - Chat View
-struct ChatView: View {
+struct GlowBotChatView: View {
     @State private var messageText = ""
-    @State private var messages: [(content: String, isUser: Bool, timestamp: Date)] = [
-        ("Hello! I'm your GlowBot skincare assistant. How can I help you today?", false, Date(timeIntervalSinceNow: -3600)),
-        ("I've been noticing more breakouts during my period. What should I do?", true, Date(timeIntervalSinceNow: -3500)),
-        ("That's very common due to hormonal fluctuations! During your period, your estrogen levels drop and testosterone can become more dominant, leading to increased oil production.", false, Date(timeIntervalSinceNow: -3400)),
-        ("I recommend using a gentle salicylic acid cleanser in the days leading up to your period, and adding a non-comedogenic moisturizer to keep your skin balanced.", false, Date(timeIntervalSinceNow: -3300))
+    @State private var messages: [(id: UUID, content: String, isUser: Bool, timestamp: Date)] = [
+        (UUID(), "Hello! I'm your GlowBot skincare assistant. How can I help you today?", false, Date(timeIntervalSinceNow: -3600)),
+        (UUID(), "I've been noticing more breakouts during my period. What should I do?", true, Date(timeIntervalSinceNow: -3500)),
+        (UUID(), "That's very common due to hormonal fluctuations! During your period, your estrogen levels drop and testosterone can become more dominant, leading to increased oil production.", false, Date(timeIntervalSinceNow: -3400)),
+        (UUID(), "I recommend using a gentle salicylic acid cleanser in the days leading up to your period, and adding a non-comedogenic moisturizer to keep your skin balanced.", false, Date(timeIntervalSinceNow: -3300))
     ]
     @State private var isTyping = false
     
@@ -841,16 +921,16 @@ struct ChatView: View {
                 // Chat messages
                 ScrollView {
                     VStack(spacing: 0) {
-                        ForEach(0..<messages.count, id: \.self) { index in
+                        ForEach(messages, id: \.id) { message in
                             MessageBubble(
-                                content: messages[index].content,
-                                isUser: messages[index].isUser,
-                                timestamp: messages[index].timestamp
+                                content: message.content,
+                                isUser: message.isUser,
+                                timestamp: message.timestamp
                             )
                         }
                         
                         if isTyping {
-                            TypingIndicator()
+                            CustomTypingIndicator()
                                 .padding(.top, 8)
                         }
                     }
@@ -907,7 +987,7 @@ struct ChatView: View {
         let trimmedMessage = messageText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedMessage.isEmpty else { return }
         
-        let newMessage = (content: trimmedMessage, isUser: true, timestamp: Date())
+        let newMessage = (id: UUID(), content: trimmedMessage, isUser: true, timestamp: Date())
         messages.append(newMessage)
         messageText = ""
         
@@ -918,7 +998,7 @@ struct ChatView: View {
             // Simulate bot response after typing
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                 isTyping = false
-                let botResponse = (content: "I'm analyzing your question about \"\(trimmedMessage)\". Let me provide some personalized advice for your skin type and current cycle phase.", isUser: false, timestamp: Date())
+                let botResponse = (id: UUID(), content: "I'm analyzing your question about \"\(trimmedMessage)\". Let me provide some personalized advice for your skin type and current cycle phase.", isUser: false, timestamp: Date())
                 messages.append(botResponse)
             }
         }
@@ -927,12 +1007,21 @@ struct ChatView: View {
 
 // MARK: - Account View
 struct AccountView: View {
-    @State private var name = "Taylor Swift"
-    @State private var email = "taylor@example.com"
+    @State private var name = "User"
+    @State private var email = ""
     @State private var birthdate = Date()
-    @State private var skinType = "Combination"
+    @State private var skinType = ""
     @State private var notifications = true
     @State private var cycleTracking = true
+    @State private var showingLogoutConfirmation = false
+    @State private var isLoggingOut = false
+    @State private var navigateToOnboarding = false
+    @State private var navigateToAuth = false
+    @State private var showingResetConfirmation = false
+    @State private var isLoggedIn = false
+    
+    // Create state object for auth view model
+    @StateObject private var authViewModel = AuthViewModel()
     
     var body: some View {
         NavigationStack {
@@ -942,132 +1031,306 @@ struct AccountView: View {
                     VStack(spacing: 16) {
                         ZStack {
                             Circle()
-                                .fill(Color.peach)
+                                .fill(Color("SalmonPink").opacity(0.8))
                                 .frame(width: 100, height: 100)
                                 .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 3)
                             
-                            Text("TS")
-                                .font(.system(size: 36, weight: .bold, design: .rounded))
-                                .foregroundColor(.white)
+                            if isLoggedIn {
+                                Text(String(name.prefix(1).uppercased()))
+                                    .font(.system(size: 36, weight: .bold, design: .rounded))
+                                    .foregroundColor(.white)
+                            } else {
+                                Image(systemName: "person.crop.circle.fill")
+                                    .font(.system(size: 40))
+                                    .foregroundColor(.white)
+                            }
                         }
                         .padding(.top, 20)
                         
-                        Text(name)
-                            .font(.system(size: 24, weight: .bold, design: .rounded))
-                            .foregroundColor(.charcoalGray)
-                        
-                        Text(email)
-                            .font(.system(size: 16, design: .rounded))
-                            .foregroundColor(.secondary)
-                        
-                        Button {
-                            // Edit profile action
-                        } label: {
-                            Text("Edit Profile")
-                                .font(.system(size: 16, weight: .medium, design: .rounded))
-                                .foregroundColor(.salmonPink)
+                        if isLoggedIn {
+                            Text(name)
+                                .font(.system(size: 24, weight: .bold, design: .rounded))
+                                .foregroundColor(Color("CharcoalGray"))
+                            
+                            Text(email)
+                                .font(.system(size: 16, design: .rounded))
+                                .foregroundColor(Color("CharcoalGray").opacity(0.7))
+                            
+                            Button {
+                                // Edit profile action
+                            } label: {
+                                Text("Edit Profile")
+                                    .font(.system(size: 16, weight: .medium, design: .rounded))
+                                    .foregroundColor(Color("SalmonPink"))
+                                    .padding(.horizontal, 20)
+                                    .padding(.vertical, 8)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 16)
+                                            .stroke(Color("SalmonPink"), lineWidth: 1)
+                                    )
+                            }
+                        } else {
+                            Text("Sign In to Access Your Account")
+                                .font(.system(size: 20, weight: .bold, design: .rounded))
+                                .foregroundColor(Color("CharcoalGray"))
+                                .padding(.top, 8)
+                            
+                            Text("Create an account to save your skincare routine and track your progress")
+                                .font(.system(size: 16, design: .rounded))
+                                .foregroundColor(Color("CharcoalGray").opacity(0.7))
+                                .multilineTextAlignment(.center)
                                 .padding(.horizontal, 20)
-                                .padding(.vertical, 8)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 16)
-                                        .stroke(Color.salmonPink, lineWidth: 1)
-                                )
+                                .padding(.bottom, 8)
+                            
+                            Button {
+                                navigateToAuth = true
+                            } label: {
+                                Text("Sign In / Sign Up")
+                                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 20)
+                                    .padding(.vertical, 12)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 16)
+                                            .fill(Color("SalmonPink"))
+                                            .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
+                                    )
+                            }
                         }
                     }
                     
-                    // Settings sections
-                    VStack(spacing: 8) {
-                        settingSection(title: "Account", items: [
-                            ("person.fill", "Personal Information"),
-                            ("lock.fill", "Privacy & Security"),
-                            ("bell.fill", "Notifications")
-                        ])
+                    if isLoggedIn {
+                        // Settings sections for logged in users
+                        VStack(spacing: 8) {
+                            settingSection(title: "Account", items: [
+                                ("person.fill", "Personal Information"),
+                                ("lock.fill", "Privacy & Security"),
+                                ("bell.fill", "Notifications")
+                            ])
+                            
+                            settingSection(title: "Preferences", items: [
+                                ("heart.fill", "Skin Type: \(skinType)"),
+                                ("calendar", "Cycle Tracking: \(cycleTracking ? "On" : "Off")"),
+                                ("moon.stars.fill", "Dark Mode: Off")
+                            ])
+                            
+                            settingSection(title: "Support", items: [
+                                ("questionmark.circle.fill", "Help Center"),
+                                ("envelope.fill", "Contact Us"),
+                                ("star.fill", "Rate the App")
+                            ])
+                        }
+                        .padding(.bottom, 20)
                         
-                        settingSection(title: "Preferences", items: [
-                            ("heart.fill", "Skin Type: \(skinType)"),
-                            ("calendar", "Cycle Tracking: \(cycleTracking ? "On" : "Off")"),
-                            ("moon.stars.fill", "Dark Mode: Off")
-                        ])
+                        // DEBUG OPTIONS
+                        VStack(spacing: 12) {
+                            Text("Debug Options")
+                                .font(.system(size: 18, weight: .bold, design: .rounded))
+                                .foregroundColor(Color("CharcoalGray"))
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.horizontal, 20)
+                            
+                            Button {
+                                showingResetConfirmation = true
+                            } label: {
+                                HStack {
+                                    Image(systemName: "arrow.clockwise.circle.fill")
+                                        .font(.system(size: 18))
+                                        .foregroundColor(.orange)
+                                    
+                                    Text("Reset Onboarding")
+                                        .font(.system(size: 16, weight: .medium, design: .rounded))
+                                        .foregroundColor(.orange)
+                                }
+                                .padding(.vertical, 12)
+                                .frame(maxWidth: .infinity)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .stroke(Color.orange, lineWidth: 1)
+                                )
+                            }
+                            .padding(.horizontal)
+                        }
+                        .padding(.bottom, 12)
                         
-                        settingSection(title: "Support", items: [
-                            ("questionmark.circle.fill", "Help Center"),
-                            ("envelope.fill", "Contact Us"),
-                            ("star.fill", "Rate the App")
-                        ])
-                    }
-                    .padding(.bottom, 20)
-                    
-                    Button {
-                        // Logout action
-                    } label: {
-                        Text("Log Out")
-                            .font(.system(size: 16, weight: .medium, design: .rounded))
-                            .foregroundColor(.red)
+                        Button {
+                            showingLogoutConfirmation = true
+                        } label: {
+                            HStack {
+                                if isLoggingOut {
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle(tint: .red))
+                                        .padding(.trailing, 8)
+                                }
+                                
+                                Text("Log Out")
+                                    .font(.system(size: 16, weight: .medium, design: .rounded))
+                                    .foregroundColor(.red)
+                            }
                             .padding(.vertical, 12)
                             .frame(maxWidth: .infinity)
                             .background(
                                 RoundedRectangle(cornerRadius: 16)
                                     .stroke(Color.red, lineWidth: 1)
                             )
+                        }
+                        .disabled(isLoggingOut)
+                        .padding(.horizontal)
+                        .padding(.bottom, 32)
+                    } else {
+                        // Simple settings for guest users
+                        VStack(spacing: 8) {
+                            settingSection(title: "General", items: [
+                                ("questionmark.circle.fill", "Help Center"),
+                                ("envelope.fill", "Contact Us"),
+                                ("doc.text.fill", "Terms & Privacy Policy")
+                            ])
+                        }
+                        .padding(.bottom, 20)
                     }
-                    .padding(.horizontal)
-                    .padding(.bottom, 32)
                 }
             }
-            .background(Color.softWhite)
+            .background(Color("SoftWhite"))
             .navigationTitle("My Account")
             .toolbarColorScheme(.dark, for: .navigationBar)
             .toolbarBackground(Color("SalmonPink"), for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
+            .alert("Log Out", isPresented: $showingLogoutConfirmation) {
+                Button("Cancel", role: .cancel) { }
+                Button("Log Out", role: .destructive) {
+                    logoutUser()
+                }
+            } message: {
+                Text("Are you sure you want to log out?")
+            }
+            .alert("Reset Onboarding", isPresented: $showingResetConfirmation) {
+                Button("Cancel", role: .cancel) { }
+                Button("Reset", role: .destructive) {
+                    // Reset onboarding
+                    if let userId = FirebaseManager.shared.userId {
+                        // Mark quiz as not completed in Firestore
+                        let db = Firestore.firestore()
+                        db.collection("users").document(userId).setData(["quizCompleted": false], merge: true) { error in
+                            if let error = error {
+                                print("Error resetting quizCompleted flag: \(error.localizedDescription)")
+                            }
+                            // Navigate to onboarding
+                            navigateToOnboarding = true
+                        }
+                    } else {
+                        navigateToOnboarding = true
+                    }
+                }
+            } message: {
+                Text("This will restart the onboarding process including the skincare quiz. Continue?")
+            }
+            .fullScreenCover(isPresented: $navigateToOnboarding) {
+                OnboardingView()
+            }
+            .fullScreenCover(isPresented: $navigateToAuth) {
+                AuthView()
+            }
+            .onAppear {
+                checkLoginStatus()
+                loadUserData()
+            }
         }
     }
     
+    private func checkLoginStatus() {
+        isLoggedIn = Auth.auth().currentUser != nil
+    }
+    
+    private func loadUserData() {
+        // Fetch current user data from Firebase
+        if let user = Auth.auth().currentUser {
+            self.email = user.email ?? ""
+            
+            // Get user's name and skin type from Firestore
+            let db = Firestore.firestore()
+            db.collection("users").document(user.uid).getDocument { document, error in
+                if let document = document, document.exists {
+                    if let data = document.data() {
+                        // Extract display name if available
+                        if let displayName = data["displayName"] as? String, !displayName.isEmpty {
+                            self.name = displayName
+                        } else if let displayName = user.displayName, !displayName.isEmpty {
+                            self.name = displayName
+                        }
+                    }
+                }
+            }
+            
+            // Get skin profile data
+            db.collection("users").document(user.uid).collection("profile").document("info").getDocument { document, error in
+                if let document = document, document.exists {
+                    if let data = document.data() {
+                        self.skinType = data["skinType"] as? String ?? "Not set"
+                    }
+                }
+            }
+        }
+    }
+    
+    private func logoutUser() {
+        isLoggingOut = true
+        
+        // Sign out the user
+        FirebaseManager.shared.signOut()
+        
+        // Add a slight delay for the UI to show loading state
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            isLoggingOut = false
+            isLoggedIn = false
+            navigateToOnboarding = true
+        }
+    }
+    
+    // Helper function for setting sections
     private func settingSection(title: String, items: [(icon: String, text: String)]) -> some View {
         VStack(alignment: .leading, spacing: 16) {
             Text(title)
                 .font(.system(size: 18, weight: .bold, design: .rounded))
-                .foregroundColor(.charcoalGray)
-                .padding(.horizontal)
+                .foregroundColor(Color("CharcoalGray"))
+                .padding(.horizontal, 20)
             
             VStack(spacing: 0) {
-                ForEach(0..<items.count, id: \.self) { index in
+                ForEach(Array(items.enumerated()), id: \.offset) { index, item in
                     Button {
                         // Setting action
                     } label: {
                         HStack {
-                            Image(systemName: items[index].icon)
-                                .font(.system(size: 18))
-                                .foregroundColor(.salmonPink)
-                                .frame(width: 30)
+                            Image(systemName: item.icon)
+                                .font(.system(size: 16))
+                                .foregroundColor(Color("SalmonPink"))
+                                .frame(width: 24)
                             
-                            Text(items[index].text)
+                            Text(item.text)
                                 .font(.system(size: 16, design: .rounded))
-                                .foregroundColor(.charcoalGray)
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .foregroundColor(Color("CharcoalGray"))
                             
+                            Spacer()
+
                             Image(systemName: "chevron.right")
                                 .font(.system(size: 14))
                                 .foregroundColor(.gray)
                         }
-                        .padding(.vertical, 14)
-                        .padding(.horizontal)
-                        .background(Color.white)
+                        .padding(.vertical, 16)
+                        .padding(.horizontal, 20)
                     }
-                    .buttonStyle(PlainButtonStyle())
                     
                     if index < items.count - 1 {
                         Divider()
-                            .padding(.leading, 55)
+                            .padding(.leading, 60)
                     }
                 }
             }
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color.white)
-                    .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
-            )
+            .background(Color.white)
+            .cornerRadius(16)
+            .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
             .padding(.horizontal)
         }
+        .padding(.top, 8)
     }
 }
 

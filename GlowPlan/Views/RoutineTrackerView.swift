@@ -85,7 +85,7 @@ struct RoutineTrackerView: View {
                     
                     // Calendar weekday row
                     HStack(spacing: 0) {
-                        ForEach(["S", "M", "T", "W", "T", "F", "S"], id: \.self) { day in
+                        ForEach(Array(zip(["S", "M", "T", "W", "T", "F", "S"].indices, ["S", "M", "T", "W", "T", "F", "S"])), id: \.0) { index, day in
                             Text(day)
                                 .font(.subheadline)
                                 .frame(maxWidth: .infinity)
@@ -96,7 +96,7 @@ struct RoutineTrackerView: View {
                     
                     // Calendar day buttons
                     HStack(spacing: 0) {
-                        ForEach(["5", "6", "7", "8", "9", "10", "11", "12"], id: \.self) { day in
+                        ForEach(Array(zip(["5", "6", "7", "8", "9", "10", "11", "12"].indices, ["5", "6", "7", "8", "9", "10", "11", "12"])), id: \.0) { index, day in
                             let isSelected = Int(day) == 8 || Int(day) == 9 || Int(day) == 10
                             
                             Text(day)
@@ -222,11 +222,12 @@ struct DateSlider: View {
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 12) {
-                ForEach(dates, id: \.self) { date in
+                ForEach(Array(zip(dates.indices, dates)), id: \.0) { index, date in
                     DateCell(date: date, isSelected: calendar.isDate(date, inSameDayAs: selectedDate))
                         .onTapGesture {
                             selectedDate = date
                         }
+                        .id("DateCell-\(index)")
                 }
             }
             .padding(.vertical, 8)
@@ -243,6 +244,7 @@ struct DateSlider: View {
                 Text(dayOfWeek)
                     .font(.caption)
                     .fontWeight(.medium)
+                    .id("DayOfWeek-\(dayOfWeek)-\(dayNumber)")
                 
                 ZStack {
                     Circle()
@@ -252,6 +254,7 @@ struct DateSlider: View {
                     Text(dayNumber)
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(isSelected ? .white : .primary)
+                        .id("DayNumber-\(dayNumber)")
                 }
             }
             .frame(width: 50)
