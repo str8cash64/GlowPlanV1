@@ -10,13 +10,6 @@ struct GlowPlanApp: App {
     
     var body: some Scene {
         WindowGroup {
-            // For development, start with onboarding flow by default
-            NavigationStack {
-                OnboardingView()
-            }
-            
-            // Uncomment this for the full Firebase-based flow
-            /*
             ZStack {
                 if !delegate.firebaseConfigured {
                     // Firebase is not configured yet
@@ -50,7 +43,6 @@ struct GlowPlanApp: App {
                     }
                 }
             }
-            */
         }
     }
 }
