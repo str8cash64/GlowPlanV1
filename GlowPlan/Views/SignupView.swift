@@ -267,13 +267,26 @@ struct SignupView: View {
                             }
                         }
                     } else {
-                        // No routine data, just navigate to home
-                        self.isSigningUp = false
-                        
-                        // Set navigateToHome to true immediately
-                        self.navigateToRoutineSaveHandler = false
-                        self.navigateToQuiz = false
-                        self.navigateToHome = true
+                        // No routine data, but still mark onboarding as completed for the user
+                        if let userId = FirebaseManager.shared.userId {
+                            // Explicitly set quizCompleted to true to prevent onboarding from showing again
+                            let db = Firestore.firestore()
+                            db.collection("users").document(userId).setData(["quizCompleted": true], merge: true) { _ in
+                                DispatchQueue.main.async {
+                                    self.isSigningUp = false
+                                    // Set navigateToHome to true immediately
+                                    self.navigateToRoutineSaveHandler = false
+                                    self.navigateToQuiz = false
+                                    self.navigateToHome = true
+                                }
+                            }
+                        } else {
+                            // Fallback if userId not available
+                            self.isSigningUp = false
+                            self.navigateToRoutineSaveHandler = false
+                            self.navigateToQuiz = false
+                            self.navigateToHome = true
+                        }
                     }
                 } else {
                     // Handle sign up error
@@ -309,11 +322,32 @@ struct SignupView: View {
                     // Order matters here - set navigateToHome last
                     self.navigateToRoutineSaveHandler = false
                     self.navigateToQuiz = false
-                    // Dismiss the current view first
-                    self.presentationMode.wrappedValue.dismiss()
-                    // Delay slightly to ensure other states have updated
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                        self.navigateToHome = true
+                    
+                    // Ensure the user's onboarding status is properly set
+                    if let userId = FirebaseManager.shared.userId {
+                        // Check if user has completed onboarding
+                        let db = Firestore.firestore()
+                        db.collection("users").document(userId).getDocument { document, error in
+                            if let document = document, document.exists {
+                                // If document exists but quizCompleted is not set, set it to true to prevent onboarding
+                                if document.data()?["quizCompleted"] == nil {
+                                    db.collection("users").document(userId).setData(["quizCompleted": true], merge: true) { _ in }
+                                }
+                            }
+                            
+                            // Dismiss the current view first
+                            self.presentationMode.wrappedValue.dismiss()
+                            // Navigate to home after a slight delay
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                self.navigateToHome = true
+                            }
+                        }
+                    } else {
+                        // Fallback if userId not available
+                        self.presentationMode.wrappedValue.dismiss()
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            self.navigateToHome = true
+                        }
                     }
                 } else {
                     self.errorMessage = error ?? "Error signing in."
