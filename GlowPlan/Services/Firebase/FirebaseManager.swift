@@ -16,6 +16,7 @@ class FirebaseManager: ObservableObject {
     @Published var isLoggedIn = false
     @Published var hasCompletedOnboarding = false
     @Published var userId: String?
+    @Published var isLoading = false
     
     // MARK: - Initialization
     
@@ -48,54 +49,41 @@ class FirebaseManager: ObservableObject {
     // MARK: - Authentication Methods
     
     /// Sign up with email and password
-    func signUp(email: String, password: String, displayName: String = "", completion: @escaping (Bool, String?) -> Void) {
-        Auth.auth().createUser(withEmail: email, password: password) { authResult, error in
-            if let error = error {
-                completion(false, error.localizedDescription)
-                return
+    func signUp(email: String, password: String, fullName: String) async throws -> Bool {
+        do {
+            // Create the user account
+            let result = try await Auth.auth().createUser(withEmail: email, password: password)
+            let user = result.user
+            
+            // Save the user's name to Firestore
+            let userData: [String: Any] = [
+                "fullName": fullName,
+                "email": email,
+                "createdAt": Date().timeIntervalSince1970,
+                // If onboarding is in progress, mark the quiz as completed
+                "quizCompleted": NavigationManager.shared.onboardingInProgress,
+                "onboardingComplete": NavigationManager.shared.onboardingInProgress
+            ]
+            
+            try await Firestore.firestore().collection("users").document(user.uid).setData(userData)
+            
+            // Update auth state
+            DispatchQueue.main.async {
+                self.isLoggedIn = true
+                // If onboarding is already in progress, skip showing it again
+                if NavigationManager.shared.onboardingInProgress {
+                    NavigationManager.shared.shouldShowHome = true
+                    self.hasCompletedOnboarding = true
+                } else {
+                    self.hasCompletedOnboarding = false
+                }
             }
             
-            if let user = authResult?.user {
-                // If display name is provided, update user profile
-                if !displayName.isEmpty {
-                    let changeRequest = user.createProfileChangeRequest()
-                    changeRequest.displayName = displayName
-                    changeRequest.commitChanges { error in
-                        if let error = error {
-                            print("Error updating display name: \(error.localizedDescription)")
-                        }
-                        
-                        // Create user document regardless of profile update success
-                        self.db.collection("users").document(user.uid).setData([
-                            "email": email,
-                            "displayName": displayName,
-                            "createdAt": FieldValue.serverTimestamp()
-                        ], merge: true) { error in
-                            if let error = error {
-                                print("Error creating user document: \(error.localizedDescription)")
-                                completion(false, error.localizedDescription)
-                            } else {
-                                completion(true, nil)
-                            }
-                        }
-                    }
-                } else {
-                    // No display name, just create the user document
-                    self.db.collection("users").document(user.uid).setData([
-                        "email": email,
-                        "createdAt": FieldValue.serverTimestamp()
-                    ], merge: true) { error in
-                        if let error = error {
-                            print("Error creating user document: \(error.localizedDescription)")
-                            completion(false, error.localizedDescription)
-                        } else {
-                            completion(true, nil)
-                        }
-                    }
-                }
-            } else {
-                completion(false, "Failed to create user")
-            }
+            print("User signed up successfully: \(user.uid)")
+            return true
+        } catch {
+            print("Error signing up: \(error.localizedDescription)")
+            throw error
         }
     }
     
@@ -270,6 +258,45 @@ class FirebaseManager: ObservableObject {
             case .failure(let error):
                 print("Error saving profile: \(error.localizedDescription)")
                 completion(false)
+            }
+        }
+    }
+    
+    // Add a method to start the onboarding process
+    func startOnboardingProcess() {
+        NavigationManager.shared.startOnboarding()
+    }
+    
+    func checkAuthenticationStatus() {
+        self.isLoading = true
+        
+        // Check if user is logged in
+        if let currentUser = Auth.auth().currentUser {
+            print("User is authenticated: \(currentUser.uid)")
+            self.isLoggedIn = true
+            self.userId = currentUser.uid
+            
+            // Check if the user needs to complete the quiz/onboarding
+            NavigationManager.shared.checkOnboardingStatus { onboardingComplete in
+                DispatchQueue.main.async {
+                    // If onboarding is complete or in progress, don't show quiz
+                    if onboardingComplete || NavigationManager.shared.onboardingInProgress {
+                        NavigationManager.shared.shouldShowHome = true
+                        self.hasCompletedOnboarding = true
+                    } else {
+                        // User needs to complete onboarding
+                        self.hasCompletedOnboarding = false
+                    }
+                    self.isLoading = false
+                }
+            }
+        } else {
+            print("User is not authenticated")
+            DispatchQueue.main.async {
+                self.isLoggedIn = false
+                self.hasCompletedOnboarding = false
+                self.userId = nil
+                self.isLoading = false
             }
         }
     }

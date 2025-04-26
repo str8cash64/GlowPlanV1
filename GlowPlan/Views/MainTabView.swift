@@ -112,8 +112,9 @@ struct HomeView: View {
                     HStack(alignment: .center) {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Good Morning, \(userName)")
-                                .font(.system(size: 28, weight: .bold, design: .rounded))
+                                .font(.system(size: 24, weight: .bold, design: .rounded))
                                 .foregroundColor(Color("CharcoalGray"))
+                                .lineLimit(1)
                             
                             Text("Your skin is looking radiant today!")
                                 .font(.system(size: 16, design: .rounded))
@@ -464,6 +465,10 @@ struct HomeView: View {
             .onAppear {
                 fetchUserName()
             }
+            .task {
+                // Fetch username immediately when view appears
+                fetchUserName()
+            }
             .fullScreenCover(isPresented: $showOnboarding) {
                 OnboardingView()
             }
@@ -477,8 +482,15 @@ struct HomeView: View {
         db.collection("users").document(userId).getDocument { document, error in
             if let document = document, document.exists, 
                let data = document.data(),
-               let name = data["displayName"] as? String {
+               let name = data["displayName"] as? String, !name.isEmpty {
                 self.userName = name
+            } else {
+                // Try to get display name from Auth user as fallback
+                if let user = Auth.auth().currentUser, 
+                   let displayName = user.displayName, 
+                   !displayName.isEmpty {
+                    self.userName = displayName
+                }
             }
         }
     }
@@ -1231,6 +1243,11 @@ struct AccountView: View {
                 AuthView()
             }
             .onAppear {
+                checkLoginStatus()
+                loadUserData()
+            }
+            .task {
+                // This ensures data is loaded even when user returns to this tab
                 checkLoginStatus()
                 loadUserData()
             }

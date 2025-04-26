@@ -13,7 +13,6 @@ struct SignupView: View {
     @State private var displayName = ""
     @State private var selectedTab = 0 // 0 for signup, 1 for login
     @State private var navigateToRoutineSaveHandler = false
-    @State private var navigateToQuiz = false
     @State private var navigateToHome = false
     @State private var errorMessage = ""
     @State private var isSigningUp = false
@@ -25,6 +24,18 @@ struct SignupView: View {
     // Data to be passed to the RoutineSaveHandlerView
     var skinProfile: UserSkinProfile? = nil
     var skinRoutine: [RoutineStep]? = nil
+    
+    // Access the NavigationManager - use environment object if available
+    // We can't use @EnvironmentObject directly as it's optional (view might be presented without it)
+    @StateObject private var localNavigationManager = NavigationManager.shared
+    // Use this to detect if this view was presented from an onboarding flow
+    private var isFromOnboarding: Bool {
+        return skinProfile != nil && skinRoutine != nil
+    }
+    
+    // Environment object wrapper for navigation manager
+    // Use this for access from parent views
+    @ObservedObject private var parentNavigationManager = NavigationManagerWrapper.shared
     
     var body: some View {
         NavigationStack {
@@ -175,19 +186,7 @@ struct SignupView: View {
                 }
             }
             .navigationBarHidden(true)
-            // First, handle QuizView navigation
-            .fullScreenCover(isPresented: $navigateToQuiz) {
-                OnboardingQuizView()
-            }
-            // Then handle RoutineSaveHandler navigation
-            .fullScreenCover(isPresented: $navigateToRoutineSaveHandler) {
-                if let skinProfile = skinProfile, let routineSteps = skinRoutine {
-                    RoutineSaveHandlerView(skinProfile: skinProfile, routineSteps: routineSteps)
-                } else {
-                    MainTabView() // Fallback if no data to save
-                }
-            }
-            // Finally, handle direct home navigation which should have highest priority
+            // We ONLY need the home navigation now
             .fullScreenCover(isPresented: $navigateToHome) {
                 MainTabView()
             }
@@ -198,8 +197,41 @@ struct SignupView: View {
             }
             .onAppear {
                 checkFirebaseConfiguration()
+                
+                // Try to capture a passed navigation manager if it exists
+                parentNavigationManager.captureIfPresent()
+                
+                // Make sure we note if user is coming from onboarding flow
+                if isFromOnboarding {
+                    let navManager = getNavigationManager()
+                    navManager.comingFromOnboardingFlow = true
+                }
+                
+                // Check if user is already logged in and skip quiz if needed
+                if FirebaseManager.shared.isLoggedIn {
+                    getNavigationManager().forceSkipQuiz()
+                }
+                
+                // Add observer for emergency navigation
+                NotificationCenter.default.addObserver(forName: Notification.Name("ForceNavigateToHome"), 
+                                                      object: nil, 
+                                                      queue: .main) { _ in
+                    self.navigateToHome = true
+                }
+            }
+            // Listen for navigation events from NavigationManager
+            .onChange(of: getNavigationManager().shouldShowHome) { newValue in
+                if newValue {
+                    // Just navigate directly to home
+                    navigateToHome = true
+                }
             }
         }
+    }
+    
+    // Helper to get the appropriate NavigationManager
+    private func getNavigationManager() -> NavigationManager {
+        return parentNavigationManager.manager ?? localNavigationManager
     }
     
     private func checkFirebaseConfiguration() {
@@ -245,53 +277,47 @@ struct SignupView: View {
             return
         }
         
-        // Sign up using Firebase
-        FirebaseManager.shared.signUp(email: email, password: password, displayName: displayName) { success, error in
-            DispatchQueue.main.async {
-                if success {
-                    // Success: If we have skin profile and routine, save it
-                    if let skinProfile = self.skinProfile, let routineSteps = self.skinRoutine {
-                        // Save profile and routine, then navigate to home
-                        FirebaseManager.shared.saveOnboardingData(
-                            skinProfile: skinProfile,
-                            routineSteps: routineSteps
-                        ) { result in
-                            DispatchQueue.main.async {
-                                self.isSigningUp = false
-                                // Always navigate to home regardless of save result
-                                // Order matters here - set navigateToHome last
-                                self.navigateToRoutineSaveHandler = false
-                                self.navigateToQuiz = false
-                                // Set navigateToHome to true immediately
-                                self.navigateToHome = true
-                            }
-                        }
-                    } else {
-                        // No routine data, but still mark onboarding as completed for the user
-                        if let userId = FirebaseManager.shared.userId {
-                            // Explicitly set quizCompleted to true to prevent onboarding from showing again
-                            let db = Firestore.firestore()
-                            db.collection("users").document(userId).setData(["quizCompleted": true], merge: true) { _ in
+        // Use Task to handle the async function
+        Task {
+            do {
+                let success = try await FirebaseManager.shared.signUp(email: email, password: password, fullName: displayName)
+                
+                DispatchQueue.main.async {
+                    if success {
+                        // Success: If we have skin profile and routine, save it
+                        if let skinProfile = self.skinProfile, let routineSteps = self.skinRoutine {
+                            // Coming from quiz flow - save profile and routine, then navigate to home
+                            FirebaseManager.shared.saveOnboardingData(
+                                skinProfile: skinProfile,
+                                routineSteps: routineSteps
+                            ) { result in
                                 DispatchQueue.main.async {
                                     self.isSigningUp = false
-                                    // Set navigateToHome to true immediately
-                                    self.navigateToRoutineSaveHandler = false
-                                    self.navigateToQuiz = false
+                                    
+                                    // Mark user as having completed onboarding
+                                    self.markUserOnboardingComplete()
+                                    
+                                    // Go directly to home page
                                     self.navigateToHome = true
                                 }
                             }
                         } else {
-                            // Fallback if userId not available
+                            // Regular signup flow - navigate to home
                             self.isSigningUp = false
-                            self.navigateToRoutineSaveHandler = false
-                            self.navigateToQuiz = false
+                            
+                            // Mark as having completed onboarding
+                            self.markUserOnboardingComplete()
+                            
+                            // Go directly to home page
                             self.navigateToHome = true
                         }
                     }
-                } else {
+                }
+            } catch {
+                DispatchQueue.main.async {
                     // Handle sign up error
                     self.isSigningUp = false
-                    self.errorMessage = error ?? "Error creating account."
+                    self.errorMessage = error.localizedDescription
                 }
             }
         }
@@ -319,40 +345,26 @@ struct SignupView: View {
             DispatchQueue.main.async {
                 self.isLoggingIn = false
                 if success {
-                    // Order matters here - set navigateToHome last
-                    self.navigateToRoutineSaveHandler = false
-                    self.navigateToQuiz = false
+                    // Mark user as having completed onboarding
+                    self.markUserOnboardingComplete()
                     
-                    // Ensure the user's onboarding status is properly set
-                    if let userId = FirebaseManager.shared.userId {
-                        // Check if user has completed onboarding
-                        let db = Firestore.firestore()
-                        db.collection("users").document(userId).getDocument { document, error in
-                            if let document = document, document.exists {
-                                // If document exists but quizCompleted is not set, set it to true to prevent onboarding
-                                if document.data()?["quizCompleted"] == nil {
-                                    db.collection("users").document(userId).setData(["quizCompleted": true], merge: true) { _ in }
-                                }
-                            }
-                            
-                            // Dismiss the current view first
-                            self.presentationMode.wrappedValue.dismiss()
-                            // Navigate to home after a slight delay
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                self.navigateToHome = true
-                            }
-                        }
-                    } else {
-                        // Fallback if userId not available
-                        self.presentationMode.wrappedValue.dismiss()
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                            self.navigateToHome = true
-                        }
-                    }
+                    // Go directly to home page
+                    self.navigateToHome = true
                 } else {
                     self.errorMessage = error ?? "Error signing in."
                 }
             }
+        }
+    }
+    
+    // Helper to mark user as having completed onboarding
+    private func markUserOnboardingComplete() {
+        if let userId = FirebaseManager.shared.userId {
+            let db = Firestore.firestore()
+            db.collection("users").document(userId).setData([
+                "quizCompleted": true,
+                "onboardingComplete": true
+            ], merge: true)
         }
     }
 }

@@ -23,6 +23,9 @@ struct RoutinePreviewView: View {
     @State private var isFirebaseConfigured = false
     @State private var isUserLoggedIn = false
     
+    // Access NavigationManager
+    @StateObject private var navigationManager = NavigationManager.shared
+    
     var body: some View {
         ZStack {
             // Background
@@ -52,22 +55,44 @@ struct RoutinePreviewView: View {
             
             // Check if user is logged in
             isUserLoggedIn = Auth.auth().currentUser != nil
+            
+            // Force skip the quiz for any existing user
+            if isUserLoggedIn {
+                navigationManager.forceSkipQuiz()
+            }
+            
+            // Add observer for emergency navigation
+            NotificationCenter.default.addObserver(forName: Notification.Name("ForceNavigateToHome"), 
+                                                  object: nil, 
+                                                  queue: .main) { _ in
+                self.navigateToHome = true
+            }
         }
         .navigationTitle("Your Personalized Routine")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(Color("SalmonPink"), for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
-        .fullScreenCover(isPresented: $navigateToSignup) {
-            SignupView(skinProfile: skinProfile, skinRoutine: skinRoutine)
-        }
+        // For direct navigation to home after signup is complete
         .fullScreenCover(isPresented: $navigateToHome) {
             MainTabView()
+        }
+        // Then handle SignupView
+        .fullScreenCover(isPresented: $navigateToSignup) {
+            // Pass the skin profile and routine to SignupView and set up a completion handler
+            SignupView(skinProfile: skinProfile, skinRoutine: skinRoutine)
+                .environmentObject(navigationManager)
         }
         .alert("Firebase Configuration Required", isPresented: $showFirebaseWarning) {
             Button("OK", role: .cancel) { }
         } message: {
             Text("Please add your GoogleService-Info.plist file to the project before continuing. See Firebase-Setup.md for instructions.")
+        }
+        // Observe NavigationManager's shouldShowHome to trigger home navigation
+        .onChange(of: navigationManager.shouldShowHome) { newValue in
+            if newValue {
+                navigateToHome = true
+            }
         }
     }
     
@@ -216,6 +241,8 @@ struct RoutinePreviewView: View {
                     saveRoutineAndNavigateHome()
                 } else {
                     // If not logged in, navigate to signup
+                    // Mark that we're coming from onboarding flow
+                    navigationManager.comingFromOnboardingFlow = true
                     navigateToSignup = true
                 }
             }) {
@@ -262,7 +289,11 @@ struct RoutinePreviewView: View {
         ) { _ in
             // Always navigate to home regardless of result
             DispatchQueue.main.async {
-                navigateToHome = true
+                // Use NavigationManager to ensure quiz is skipped
+                self.navigationManager.forceSkipQuiz()
+                
+                // Then navigate to home
+                self.navigateToHome = true
             }
         }
     }

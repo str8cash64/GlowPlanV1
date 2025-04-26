@@ -8,6 +8,9 @@ struct OnboardingQuizView: View {
     // For text field questions
     @State private var textFieldValue = ""
     
+    // Navigation manager
+    @StateObject private var navigationManager = NavigationManager.shared
+    
     private var questions = OnboardingQuizData.allQuestions
     private var currentQuestion: OnboardingQuizQuestion { questions[currentQuestionIndex] }
     private var progress: CGFloat {
@@ -175,6 +178,12 @@ struct OnboardingQuizView: View {
             .toolbarBackground(.visible, for: .navigationBar)
             .navigationDestination(isPresented: $showRoutinePreview) {
                 RoutinePreviewView(skinProfile: skinProfile)
+            }
+            .onAppear {
+                // Mark that onboarding is in progress to prevent duplicate quiz
+                navigationManager.startOnboarding()
+                // Also tell FirebaseManager
+                FirebaseManager.shared.startOnboardingProcess()
             }
         }
     }

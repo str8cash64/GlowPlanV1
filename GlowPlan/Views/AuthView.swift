@@ -235,15 +235,24 @@ struct AuthView: View {
         
         isLoading = true
         
-        FirebaseManager.shared.signUp(email: email, password: password, displayName: displayName) { success, error in
-            isLoading = false
-            
-            if success {
-                // Signup successful, navigate to home
-                navigateToHome = true
-            } else {
-                // Show error
-                showAlert(title: "Sign Up Failed", message: error ?? "Unable to create account. Please try again.")
+        // Use Task to handle the async function
+        Task {
+            do {
+                let success = try await FirebaseManager.shared.signUp(email: email, password: password, fullName: displayName)
+                
+                DispatchQueue.main.async {
+                    self.isLoading = false
+                    if success {
+                        // Signup successful, navigate to home
+                        self.navigateToHome = true
+                    }
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    self.isLoading = false
+                    // Show error
+                    self.showAlert(title: "Sign Up Failed", message: error.localizedDescription)
+                }
             }
         }
     }

@@ -9,6 +9,9 @@ struct RoutineSaveHandlerView: View {
     @State private var navigateToHome = false
     @State private var errorMessage = ""
     
+    // Access the NavigationManager
+    @StateObject private var navigationManager = NavigationManager.shared
+    
     let skinProfile: UserSkinProfile
     let routineSteps: [RoutineStep]
     
@@ -48,6 +51,8 @@ struct RoutineSaveHandlerView: View {
                         .padding(.bottom, 16)
                     
                     Button {
+                        // Mark that we're coming from the onboarding flow
+                        navigationManager.comingFromOnboardingFlow = true
                         navigateToSignup = true
                     } label: {
                         Text("Sign Up / Login")
@@ -98,12 +103,28 @@ struct RoutineSaveHandlerView: View {
                     }
                 }
             }
+            
+            // Add observer for home navigation
+            NotificationCenter.default.addObserver(forName: Notification.Name("ForceNavigateToHome"), 
+                                                  object: nil, 
+                                                  queue: .main) { _ in
+                self.navigateToHome = true
+            }
         }
+        // Simple presentation order - signup first for the natural quiz flow
         .fullScreenCover(isPresented: $navigateToSignup) {
+            // Pass the skin profile and routine to SignupView
             SignupView(skinProfile: skinProfile, skinRoutine: routineSteps)
+                .environmentObject(navigationManager)
         }
         .fullScreenCover(isPresented: $navigateToHome) {
             MainTabView()
+        }
+        // Observe NavigationManager's shouldShowHome to trigger home navigation
+        .onChange(of: navigationManager.shouldShowHome) { newValue in
+            if newValue {
+                navigateToHome = true
+            }
         }
     }
     
@@ -121,8 +142,11 @@ struct RoutineSaveHandlerView: View {
             routineSteps: routineSteps
         ) { result in
             DispatchQueue.main.async {
-                // Always navigate to home regardless of save result
-                navigateToHome = true
+                // Mark user as having completed onboarding
+                self.navigationManager.markUserAsOnboarded()
+                
+                // Navigate to home
+                self.navigateToHome = true
             }
         }
     }
