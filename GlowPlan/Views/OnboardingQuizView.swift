@@ -60,7 +60,7 @@ struct OnboardingQuizView: View {
                                     options: currentQuestion.options,
                                     selectedOption: getSingleSelection(),
                                     onSelect: { option in
-                                        skinProfile.saveResponse(for: currentQuestion.id, response: option)
+                                        skinProfile.saveResponse(for: currentQuestion.id, singleSelection: option)
                                     }
                                 )
                             
@@ -69,7 +69,7 @@ struct OnboardingQuizView: View {
                                     options: currentQuestion.options,
                                     selectedOptions: getMultiSelections(),
                                     onSelect: { options in
-                                        skinProfile.saveResponse(for: currentQuestion.id, response: options)
+                                        skinProfile.saveResponse(for: currentQuestion.id, multiSelections: options)
                                     }
                                 )
                             
@@ -77,7 +77,7 @@ struct OnboardingQuizView: View {
                                 ToggleOption(
                                     isOn: getToggleValue(),
                                     onToggle: { value in
-                                        skinProfile.saveResponse(for: currentQuestion.id, response: value)
+                                        skinProfile.saveResponse(for: currentQuestion.id, toggleValue: value)
                                     }
                                 )
                             
@@ -86,7 +86,7 @@ struct OnboardingQuizView: View {
                                     text: $textFieldValue,
                                     placeholder: currentQuestion.textFieldPlaceholder,
                                     onCommit: {
-                                        skinProfile.saveResponse(for: currentQuestion.id, response: textFieldValue)
+                                        skinProfile.saveResponse(for: currentQuestion.id, textValue: textFieldValue)
                                     }
                                 )
                                 .onAppear {
@@ -135,7 +135,7 @@ struct OnboardingQuizView: View {
                         Button(action: {
                             // If text field, save the value
                             if currentQuestion.questionType == .textField {
-                                skinProfile.saveResponse(for: currentQuestion.id, response: textFieldValue)
+                                skinProfile.saveResponse(for: currentQuestion.id, textValue: textFieldValue)
                             }
                             
                             withAnimation {
