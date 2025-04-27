@@ -107,6 +107,8 @@ class FirebaseManager: ObservableObject {
     func signOut() {
         do {
             try Auth.auth().signOut()
+            // Clear cached user data
+            UserDefaults.standard.removeObject(forKey: "cached_user_name")
         } catch {
             print("Error signing out: \(error.localizedDescription)")
         }

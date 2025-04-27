@@ -101,7 +101,7 @@ struct MainTabView: View {
 struct HomeView: View {
     @State private var showingNotifications = false
     @State private var activeIndex = 0
-    @State private var userName = "User" // Default value
+    @AppStorage("cached_user_name") private var userName = "User" // Use AppStorage instead of State
     @State private var showOnboarding = false // Add state for debug
     
     var body: some View {
@@ -1024,7 +1024,7 @@ struct GlowBotChatView: View {
 
 // MARK: - Account View
 struct AccountView: View {
-    @State private var name = "User"
+    @AppStorage("cached_user_name") private var name = "User"
     @State private var email = ""
     @State private var birthdate = Date()
     @State private var skinType = ""
@@ -1302,6 +1302,9 @@ struct AccountView: View {
     
     private func logoutUser() {
         isLoggingOut = true
+        
+        // Reset the cached name
+        name = "User"
         
         // Sign out the user
         FirebaseManager.shared.signOut()
