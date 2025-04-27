@@ -63,7 +63,7 @@ struct MainTabView: View {
     
     var body: some View {
         TabView(selection: $selectedTab) {
-            HomeView()
+            HomeView(mainTabSelection: $selectedTab)
                 .tabItem {
                     Label("Home", systemImage: "house.fill")
                 }
@@ -103,6 +103,13 @@ struct HomeView: View {
     @State private var activeIndex = 0
     @AppStorage("cached_user_name") private var userName = "User" // Use AppStorage instead of State
     @State private var showOnboarding = false // Add state for debug
+    @Binding var mainTabSelection: Int // Add binding to parent's selected tab
+    @ObservedObject private var routineManager = RoutineManager.shared // Add RoutineManager
+    
+    // Init with binding
+    init(mainTabSelection: Binding<Int>) {
+        self._mainTabSelection = mainTabSelection
+    }
     
     var body: some View {
         NavigationStack {
@@ -329,7 +336,8 @@ struct HomeView: View {
                             Spacer()
                             
                             Button {
-                                // Action to view all routines
+                                // Navigate to Tracker tab
+                                mainTabSelection = 1
                             } label: {
                                 Text("View All")
                                     .font(.system(size: 14, weight: .medium, design: .rounded))
@@ -338,59 +346,74 @@ struct HomeView: View {
                         }
                         .padding(.horizontal)
                         
-                        let routineSteps = [
-                            (icon: "drop.fill", title: "Morning Cleanse", description: "Gentle face wash"),
-                            (icon: "sparkles", title: "Vitamin C Serum", description: "Apply 2-3 drops"),
-                            (icon: "sun.max.fill", title: "Apply SPF 50", description: "Reapply every 2 hours")
-                        ]
+                        // Get the morning routine from the shared routineManager
+                        let morningRoutine = routineManager.getRoutineByTimeOfDay("Morning")
                         
-                        ForEach(Array(routineSteps.enumerated()), id: \.offset) { index, step in
-                            HStack {
-                                ZStack {
-                                    Circle()
-                                        .fill(Color("Peach").opacity(0.3))
-                                        .frame(width: 44, height: 44)
-                                    
-                                    Image(systemName: step.icon)
-                                        .font(.system(size: 20))
-                                        .foregroundColor(Color("SalmonPink"))
-                                }
-                                
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(step.title)
-                                        .font(.system(size: 16, weight: .medium, design: .rounded))
-                                        .foregroundColor(Color("CharcoalGray"))
-                                    
-                                    Text(step.description)
-                                        .font(.system(size: 12, design: .rounded))
-                                        .foregroundColor(Color("CharcoalGray").opacity(0.6))
-                                }
-                                .padding(.leading, 8)
-                                
-                                Spacer()
-                                
-                                Button {
-                                    // Mark as complete action
-                                } label: {
+                        if let morningRoutine = morningRoutine {
+                            ForEach(morningRoutine.steps) { step in
+                                HStack {
                                     ZStack {
                                         Circle()
-                                            .stroke(Color("SalmonPink").opacity(0.3), lineWidth: 2)
-                                            .frame(width: 28, height: 28)
+                                            .fill(Color("Peach").opacity(0.3))
+                                            .frame(width: 44, height: 44)
                                         
-                                        Image(systemName: "checkmark")
-                                            .font(.system(size: 14, weight: .bold))
-                                            .foregroundColor(Color("SalmonPink").opacity(0.5))
+                                        Image(systemName: step.icon)
+                                            .font(.system(size: 20))
+                                            .foregroundColor(Color("SalmonPink"))
+                                    }
+                                    
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(step.name)
+                                            .font(.system(size: 16, weight: .medium, design: .rounded))
+                                            .foregroundColor(Color("CharcoalGray"))
+                                        
+                                        // This is a simpler display without the product description
+                                        Text(step.isCompleted ? "Completed" : "To do")
+                                            .font(.system(size: 12, design: .rounded))
+                                            .foregroundColor(Color("CharcoalGray").opacity(0.6))
+                                    }
+                                    .padding(.leading, 8)
+                                    
+                                    Spacer()
+                                    
+                                    Button {
+                                        // Toggle step completion using the RoutineManager
+                                        routineManager.toggleStepCompletion(
+                                            routineId: morningRoutine.id,
+                                            stepId: step.id
+                                        )
+                                    } label: {
+                                        ZStack {
+                                            Circle()
+                                                .stroke(Color("SalmonPink").opacity(0.3), lineWidth: 2)
+                                                .frame(width: 28, height: 28)
+                                            
+                                            if step.isCompleted {
+                                                Image(systemName: "checkmark")
+                                                    .font(.system(size: 14, weight: .bold))
+                                                    .foregroundColor(Color("SalmonPink"))
+                                            } else {
+                                                Image(systemName: "checkmark")
+                                                    .font(.system(size: 14, weight: .bold))
+                                                    .foregroundColor(Color("SalmonPink").opacity(0.5))
+                                            }
+                                        }
                                     }
                                 }
+                                .padding(.vertical, 16)
+                                .padding(.horizontal, 20)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .fill(Color.white)
+                                        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 4)
+                                )
+                                .padding(.horizontal)
                             }
-                            .padding(.vertical, 16)
-                            .padding(.horizontal, 20)
-                            .background(
-                                RoundedRectangle(cornerRadius: 16)
-                                    .fill(Color.white)
-                                    .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 4)
-                            )
-                            .padding(.horizontal)
+                        } else {
+                            // Fallback if no morning routine is found
+                            Text("No routine steps found")
+                                .foregroundColor(Color("CharcoalGray").opacity(0.6))
+                                .padding(.horizontal)
                         }
                     }
                     

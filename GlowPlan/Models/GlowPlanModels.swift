@@ -68,4 +68,45 @@ enum GlowPlanModels {
             ]
         )
     ]
+}
+
+// MARK: - Routine Manager
+class RoutineManager: ObservableObject {
+    // Singleton for app-wide state
+    static let shared = RoutineManager()
+    
+    // Published properties for state management
+    @Published var routines: [GlowPlanModels.Routine]
+    
+    // Private init to enforce singleton
+    private init() {
+        // Initialize with sample data
+        self.routines = GlowPlanModels.sampleRoutines
+    }
+    
+    // Function to toggle a step's completion status
+    func toggleStepCompletion(routineId: UUID, stepId: UUID) {
+        if let routineIndex = routines.firstIndex(where: { $0.id == routineId }),
+           let stepIndex = routines[routineIndex].steps.firstIndex(where: { $0.id == stepId }) {
+            // Toggle the step's completion status
+            routines[routineIndex].steps[stepIndex].isCompleted.toggle()
+        }
+    }
+    
+    // Function to update a routine
+    func updateRoutine(_ routine: GlowPlanModels.Routine) {
+        if let index = routines.firstIndex(where: { $0.id == routine.id }) {
+            routines[index] = routine
+        }
+    }
+    
+    // Function to get a specific routine by ID
+    func getRoutine(id: UUID) -> GlowPlanModels.Routine? {
+        return routines.first(where: { $0.id == id })
+    }
+    
+    // Function to get a routine by time of day
+    func getRoutineByTimeOfDay(_ timeOfDay: String) -> GlowPlanModels.Routine? {
+        return routines.first(where: { $0.timeOfDay == timeOfDay })
+    }
 } 

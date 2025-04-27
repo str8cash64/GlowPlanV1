@@ -12,8 +12,13 @@ struct RoutineTrackerView: View {
     @State private var showHistoryView = false
     @State private var showingRoutineRunner = false
     
-    // Use sample data from shared models
-    private let routines = GlowPlanModels.sampleRoutines
+    // Use the shared RoutineManager instead of direct sample data
+    @ObservedObject private var routineManager = RoutineManager.shared
+    
+    // Computed property to access routines
+    private var routines: [GlowPlanModels.Routine] {
+        return routineManager.routines
+    }
     
     // Computed progress for each routine
     private func routineProgress(_ routine: GlowPlanModels.Routine) -> Double {
@@ -40,7 +45,7 @@ struct RoutineTrackerView: View {
                         
                         Button(action: {
                             // Find the selected routine
-                            selectedRoutine = routines.first { $0.timeOfDay == selectedTab }
+                            selectedRoutine = routineManager.getRoutineByTimeOfDay(selectedTab)
                             showingRoutineRunner = true
                         }) {
                             Text("Start Now")
@@ -112,16 +117,24 @@ struct RoutineTrackerView: View {
                     
                     // Routine steps
                     VStack(spacing: 16) {
-                        if selectedTab == "Morning" {
-                            routineStepRow(number: 1, title: "Cleanse", description: "Gently wash face with lukewarm water", isCompleted: true)
-                            routineStepRow(number: 2, title: "Apply Vitamin C", description: "Apply 2-3 drops to face and neck", isCompleted: true)
-                            routineStepRow(number: 3, title: "Moisturize", description: "Apply cream to face and neck", isCompleted: false)
-                            routineStepRow(number: 4, title: "Apply Sunscreen", description: "Use SPF 30 or higher", isCompleted: false)
+                        if let selectedRoutineData = routineManager.getRoutineByTimeOfDay(selectedTab) {
+                            ForEach(selectedRoutineData.steps) { step in
+                                routineStepRow(number: selectedRoutineData.steps.firstIndex(where: { $0.id == step.id })! + 1, 
+                                              title: step.name, 
+                                              description: step.name, 
+                                              isCompleted: step.isCompleted,
+                                              onToggle: {
+                                                  // Toggle step completion using the RoutineManager
+                                                  routineManager.toggleStepCompletion(
+                                                      routineId: selectedRoutineData.id, 
+                                                      stepId: step.id
+                                                  )
+                                              })
+                            }
                         } else {
-                            routineStepRow(number: 1, title: "Oil Cleanse", description: "Remove makeup and sunscreen", isCompleted: false)
-                            routineStepRow(number: 2, title: "Water Cleanse", description: "Cleanse with gentle cleanser", isCompleted: false)
-                            routineStepRow(number: 3, title: "Apply Tretinoin", description: "Pea-sized amount to entire face", isCompleted: false)
-                            routineStepRow(number: 4, title: "Moisturizer", description: "Apply generous amount", isCompleted: false)
+                            Text("No routine steps found")
+                                .foregroundColor(Color("CharcoalGray").opacity(0.7))
+                                .padding()
                         }
                     }
                     .padding(.top, 16)
@@ -165,7 +178,7 @@ struct RoutineTrackerView: View {
     }
     
     // Helper function to create routine step rows
-    private func routineStepRow(number: Int, title: String, description: String, isCompleted: Bool) -> some View {
+    private func routineStepRow(number: Int, title: String, description: String, isCompleted: Bool, onToggle: @escaping () -> Void) -> some View {
         HStack(spacing: 16) {
             // Step number badge
             ZStack {
@@ -202,6 +215,9 @@ struct RoutineTrackerView: View {
         .background(Color.white)
         .cornerRadius(12)
         .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
+        .onTapGesture {
+            onToggle()
+        }
     }
 }
 
