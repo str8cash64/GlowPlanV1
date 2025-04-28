@@ -1,4 +1,5 @@
 import SwiftUI
+import Foundation
 #if canImport(FirebaseAuth)
 import FirebaseAuth
 #endif
@@ -300,60 +301,6 @@ struct RoutinePreviewView: View {
 }
 
 // MARK: - Supporting Views
-
-struct RoutinePreviewStepCard: View {
-    let stepNumber: Int
-    let stepName: String
-    let productName: String
-    let description: String
-    
-    var body: some View {
-        HStack(alignment: .top, spacing: 16) {
-            // Step number circle
-            ZStack {
-                Circle()
-                    .fill(Color("SalmonPink").opacity(0.2))
-                    .frame(width: 40, height: 40)
-                
-                Text("\(stepNumber)")
-                    .font(.system(size: 20, weight: .bold, design: .rounded))
-                    .foregroundColor(Color("SalmonPink"))
-            }
-            
-            VStack(alignment: .leading, spacing: 8) {
-                // Step name and product
-                HStack {
-                    Text(stepName)
-                        .font(.system(size: 18, weight: .bold, design: .rounded))
-                        .foregroundColor(Color("CharcoalGray"))
-                    
-                    Text("→")
-                        .font(.system(size: 18, design: .rounded))
-                        .foregroundColor(Color("CharcoalGray").opacity(0.7))
-                    
-                    Text(productName)
-                        .font(.system(size: 18, weight: .medium, design: .rounded))
-                        .foregroundColor(Color("SalmonPink"))
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                
-                // Description
-                Text(description)
-                    .font(.system(size: 14, design: .rounded))
-                    .foregroundColor(Color("CharcoalGray").opacity(0.8))
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            
-            Spacer()
-        }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.white)
-                .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
-        )
-    }
-}
 
 struct RoutinePreviewView_Previews: PreviewProvider {
     static var previews: some View {
