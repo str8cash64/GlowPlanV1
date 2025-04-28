@@ -1,0 +1,47 @@
+## How to Run OpenAI Skincare Routine Generation Tests
+
+There are two ways to run the OpenAI tests:
+
+### 1. From Xcode:
+
+1. Open the GlowPlan project in Xcode
+2. Run the app in the iOS simulator
+3. Check the Xcode console for test results
+
+### 2. From Command Line:
+
+You can run the test directly from the command line using Swift:
+
+```bash
+# Navigate to the project directory
+cd /path/to/GlowPlan
+
+# Run the test script
+swift RunOpenAITest.swift
+```
+
+### Viewing Results:
+
+The test will display:
+- Morning routine steps with products
+- Evening routine steps with products
+- Verification that SPF is included in morning routine (if requested)
+- Verification that double cleanse is included in evening routine (if requested)
+
+### Custom Testing:
+
+You can also modify the test parameters in `OpenAITest.swift` in the `testCustomRules()` function to try different skin profiles.
+
+The current test profile is configured with:
+- Skin Type: Combination
+- Concerns: Dryness
+- Sensitivity: Slightly sensitive
+- SPF: Yes
+- Double Cleanse: Yes
+- Climate: Dry
+- Preferred Ingredients: Hyaluronic Acid, Niacinamide, Vitamin C
+- Allergies: Essential Oils, Lavender
+
+### Note About the API Key:
+
+The API key is configured in `OpenAI-Config.swift`. Please ensure you rotate (change) this key after testing, as it was included in plaintext in the code. 
