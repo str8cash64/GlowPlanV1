@@ -94,3 +94,6 @@ GoogleService-Info.plist
 
 # Environment variables
 *.env
+
+# Ignore OpenAI API key
+GlowPlan/Services/OpenAIService.swift
